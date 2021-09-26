@@ -690,6 +690,9 @@ typedef struct pglist_data {
 	struct task_struct *kcompressd[MAX_KCOMPRESSD_THREADS];
 	struct kfifo kcompress_fifo[MAX_KCOMPRESSD_THREADS];
 
+	wait_queue_head_t kshrinkd_wait;
+	struct task_struct *kshrinkd;
+
 #ifdef CONFIG_COMPACTION
 	int kcompactd_max_order;
 	enum zone_type kcompactd_classzone_idx;
