@@ -1042,6 +1042,7 @@ config ISHACKER_SECURE_KERNEL
 	help
 	  Select security-enhancing but performance-heavy options
 
+
 source "kernel/gcov/Kconfig"
 
 source "scripts/gcc-plugins/Kconfig"
