@@ -17,7 +17,8 @@
  * wakeup-preemption), since its likely going to consume data we
  * touched, increases cache locality.
  */
-#define SCHED_FEAT_NEXT_BUDDY 0
+
+#define SCHED_FEAT_NEXT_BUDDY 1
 
 /*
  * Prefer to schedule the task that ran last (when we did
@@ -44,7 +45,8 @@
 /*
  * Decrement CPU capacity based on time not spent running tasks
  */
-#define SCHED_FEAT_NONTASK_CAPACITY 1
+
+#define SCHED_FEAT_NONTASK_CAPACITY 0
 
 /*
  * Queue remote wakeups on the target CPU and process them
