@@ -703,6 +703,7 @@ OPT_FLAGS	:= -O3 -march=armv8-a+crc+crypto
 OPT_FLAGS	+= -mtune=cortex-a53
 endif
 
+<<<<<<< HEAD
 #Enable MLGO
 #ifeq ($(shell test $(CONFIG_CLANG_VERSION) -gt 180000; echo $$?),0)
 #KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release
@@ -720,6 +721,10 @@ KBUILD_CFLAGS += -mllvm -hot-cold-split=true
 
 KBUILD_CFLAGS	+= $(OPT_FLAGS)
 KBUILD_AFLAGS	+= $(OPT_FLAGS)
+
+ifdef CONFIG_LTO_CLANG
+KBUILD_LDFLAGS  += --plugin-opt=-import-instr-limit=40
+endif
 
 ifdef CONFIG_POLLY_CLANG
 POLLY_FLAGS	+= -mllvm -polly \
