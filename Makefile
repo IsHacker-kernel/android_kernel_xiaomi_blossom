@@ -788,6 +788,18 @@ endif
 ifeq ($(cc-name),clang)
 KBUILD_CFLAGS	+= -mllvm -inline-threshold=1
 KBUILD_CFLAGS	+= -mllvm -inlinehint-threshold=1
+KBUILD_CFLAGS   += -mllvm -unroll-threshold=1
+KBUILD_CFLAGS  += -mllvm -inline-savings-multiplier=18
+KBUILD_CFLAGS  += -mllvm -inline-cold-callsite-threshold=65
+KBUILD_CFLAGS  += -mllvm -ignore-tti-inline-compatible
+KBUILD_CFLAGS  += -mllvm -inline-size-allowance=30
+KBUILD_CFLAGS  += -mllvm -inlinecold-threshold=160
+KBUILD_CFLAGS  += -mllvm -locally-hot-callsite-threshold=1050
+KBUILD_CFLAGS  += -mllvm -inline-instr-cost=8
+KBUILD_CFLAGS  += -mllvm -inline-call-penalty=8
+KBUILD_CFLAGS  += -mllvm -hot-callsite-rel-freq=130
+KBUILD_CFLAGS  += -mllvm -cold-callsite-rel-freq=6
+KBUILD_CFLAGS  += -mllvm -inline-enable-cost-benefit-analysis
 else ifeq ($(cc-name),gcc)
 KBUILD_CFLAGS	+= --param max-inline-insns-single=1
 KBUILD_CFLAGS	+= --param max-inline-insns-auto=1
