@@ -6,7 +6,7 @@ name: Build Kernel with KernelSU-SUSFS
 on:
   push:
     branches:
-      - ksu-susfs
+      - V5
   pull_request:
   workflow_dispatch:
 
@@ -31,30 +31,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc bison flex build-essential libssl-dev libelf-dev cpio kmod git zip curl ca-certificates jq \
             wget libffi-dev zlib1g-dev libreadline-dev libsqlite3-dev libbz2-dev libncurses5-dev libgdbm-dev liblzma-dev tk-dev
-
-      - name: Cache Python 2.7
-        id: cache-python2
-        uses: actions/cache@v4
-        with:
-          path: /usr/local/lib/python2.7
-          key: python2.7-${{ runner.os }}-ubuntu22
-
-      - name: Compile Python 2.7
-        if: steps.cache-python2.outputs.cache-hit != 'true'
-        run: |
-          cd /tmp
-          wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tar.xz
-          tar -xf Python-2.7.18.tar.xz
-          cd Python-2.7.18
-          ./configure --enable-optimizations --prefix=/usr/local
-          make -j$(nproc)
-          sudo make altinstall
-
-      - name: Setup Python 2.7 symlinks
-        run: |
-          sudo ln -sf /usr/local/bin/python2.7 /usr/bin/python2
-          sudo ln -sf /usr/local/bin/python2.7 /usr/bin/python
-          python2 --version
 
       - name: Configure git
         run: |
@@ -83,7 +59,8 @@ jobs:
       - name: Integrate KernelSU-Next
         run: |
           curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
-          chmod u+x susfs.sh
+          chmod u+x clean.sh
+          bash clean.sh
 
       - name: Build kernel
         run: |
@@ -113,7 +90,6 @@ jobs:
           cd anykernel
           rm -f zImage *.dtb
 
-          # Copy kernel image directly from build output (no artifact transfer needed)
           if [ -f "../out/arch/${KERNEL_ARCH}/boot/Image.gz-dtb" ]; then
             cp ../out/arch/${KERNEL_ARCH}/boot/Image.gz-dtb Image.gz-dtb
             echo "✓ Copied Image.gz-dtb"
