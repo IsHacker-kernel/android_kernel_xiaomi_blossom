@@ -5,7 +5,7 @@ include ../../../scripts/Kbuild.include
 VERSION = 1.0
 
 BINDIR=usr/bin
-WARNFLAGS=-Wall -Wshadow -W -Wformat -Wimplicit-function-declaration -Wimplicit-int
+WARNFLAGS=-Wall -Wshadow -W -Wformat  
 CFLAGS+= -O1 ${WARNFLAGS}
 # Add "-fstack-protector" only if toolchain supports it.
 CFLAGS+= $(call cc-option,-fstack-protector)

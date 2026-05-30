@@ -1,2 +1,2 @@
-subdir-ccflags-y += -Werror
+subdir-ccflags-y += 
 obj-y += mtk-dma-contig.o

@@ -9,7 +9,7 @@ endif
 
 M ?=$(srctree)/drivers/tee/tkcore
 
-#ccflags-y+=-Werror
+#ccflags-y+=
 ccflags-y += -I$(M)/include/linux
 ccflags-y += -I$(M)/include
 ccflags-y += -I$(M)

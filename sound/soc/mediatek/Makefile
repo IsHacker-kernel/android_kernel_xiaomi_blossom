@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0
-subdir-ccflags-y := -Werror $(call cc-disable-warning, unused-but-set-variable)
+subdir-ccflags-y :=  $(call cc-disable-warning, unused-but-set-variable)
 
 # dsp related code
 obj-$(CONFIG_MTK_AUDIODSP_SUPPORT) += audio_dsp/
@@ -19,7 +19,7 @@ obj-$(CONFIG_SND_SOC_MT8173) += mt8173/
 obj-$(CONFIG_SND_SOC_AW87519) += aw87519/
 
 # include path
-subdir-ccflags-y += -Werror -I$(srctree)/drivers/misc/mediatek/include/mt-plat
+subdir-ccflags-y +=  -I$(srctree)/drivers/misc/mediatek/include/mt-plat
 
 # adsp
 ifeq ($(CONFIG_MTK_AURISYS_PHONE_CALL_SUPPORT),y)

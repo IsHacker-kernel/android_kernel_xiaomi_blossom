@@ -22,7 +22,7 @@ CC := $(CC_BIN)$(BIN_PREFIX)gcc
 #CFLAGS := -Wfatal-errors -Wall
 #CFLAGS := -Wall
 CFLAGS := -Wl,--warn-once
-#-Wimplicit -O -Wstrict-aliasing=2
+# -O -Wstrict-aliasing=2
 #CFLAGS += -Wshadow # Local variable is shadow by other local var
 # CFG_REMIND_IMPLEMENT:
 # flag for change header file prototype to define
