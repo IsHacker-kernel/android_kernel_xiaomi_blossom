@@ -58,10 +58,10 @@ jobs:
 
       - name: Integrate KernelSU-Next
         run: |
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
           chmod u+x clean.sh
           bash clean.sh
-
+          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
+      
       - name: Build kernel
         run: |
           export PATH="/tmp/clang/bin:/tmp/gcc-aarch64/bin:/tmp/gcc-arm/bin:${PATH}"
