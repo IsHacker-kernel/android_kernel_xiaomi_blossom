@@ -348,7 +348,7 @@ static void mpol_rebind_preferred(struct mempolicy *pol,
  */
 static void mpol_rebind_policy(struct mempolicy *pol, const nodemask_t *newmask)
 {
-	if (!pol || pol->mode == MPOL_LOCAL)
+	if (!pol)
 		return;
 	if (!mpol_store_user_nodemask(pol) && !(pol->flags & MPOL_F_LOCAL) &&
 	    nodes_equal(pol->w.cpuset_mems_allowed, *newmask))
@@ -574,8 +574,7 @@ static int queue_pages_hugetlb(pte_t *pte, unsigned long hmask,
 		goto unlock;
 	/* With MPOL_MF_MOVE, we migrate only unshared hugepage. */
 	if (flags & (MPOL_MF_MOVE_ALL) ||
-	    (flags & MPOL_MF_MOVE && page_mapcount(page) == 1 &&
-	     !hugetlb_pmd_shared(pte)))
+	    (flags & MPOL_MF_MOVE && page_mapcount(page) == 1))
 		isolate_huge_page(page, qp->pagelist);
 unlock:
 	spin_unlock(ptl);
@@ -862,11 +861,11 @@ static void get_policy_nodemask(struct mempolicy *p, nodemask_t *nodes)
 
 static int lookup_node(unsigned long addr)
 {
-	struct page *p = NULL;
+	struct page *p;
 	int err;
 
 	err = get_user_pages(addr & PAGE_MASK, 1, 0, &p, NULL);
-	if (err > 0) {
+	if (err >= 0) {
 		err = page_to_nid(p);
 		put_page(p);
 	}
