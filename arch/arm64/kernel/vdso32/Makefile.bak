@@ -27,11 +27,11 @@ CC_COMPAT ?= $(CROSS_COMPILE_COMPAT)gcc
 endif
 
 cc32-option = $(call try-run,\
-        $(CC_COMPAT) $(1) -c -x c /dev/null -o "$$TMP",$(1),$(2))
+  $(CC_COMPAT) $(1) -c -x c /dev/null -o "$$TMP",$(1),$(2))
 cc32-disable-warning = $(call try-run,\
 	$(CC_COMPAT) -W$(strip $(1)) -c -x c /dev/null -o "$$TMP",-Wno-$(strip $(1)))
 cc32-ldoption = $(call try-run,\
-        $(CC_COMPAT) $(1) -nostdlib -x c /dev/null -o "$$TMP",$(1),$(2))
+  $(CC_COMPAT) $(1) -nostdlib -x c /dev/null -o "$$TMP",$(1),$(2))
 cc32-as-instr = $(call try-run,\
 	printf "%b\n" "$(1)" | $(CC_COMPAT) $(VDSO_AFLAGS) -c -x assembler -o "$$TMP" -,$(2),$(3))
 
@@ -76,24 +76,24 @@ VDSO_CAFLAGS += -DDISABLE_BRANCH_PROFILING
 # fall back to v7. There is no easy way to check for what architecture the code
 # is being compiled, so define a macro specifying that (see arch/arm/Makefile).
 VDSO_CAFLAGS += $(call cc32-option,-march=armv8-a -D__LINUX_ARM_ARCH__=8,\
-                                   -march=armv7-a -D__LINUX_ARM_ARCH__=7)
+         -march=armv7-a -D__LINUX_ARM_ARCH__=7)
 
 VDSO_CFLAGS := $(VDSO_CAFLAGS)
 VDSO_CFLAGS += -DENABLE_COMPAT_VDSO=1
 # KBUILD_CFLAGS from top-level Makefile
 VDSO_CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-               -fno-strict-aliasing -fno-common \
-               -Werror-implicit-function-declaration \
-               -Wno-format-security \
-               -std=gnu89
-VDSO_CFLAGS  += -O2
+    -fno-strict-aliasing -fno-common \
+    -Werror \
+    -Wno-format-security \
+    -std=gnu89
+VDSO_CFLAGS += -O2
 # Some useful compiler-dependent flags from top-level Makefile
 VDSO_CFLAGS += $(call cc32-option,-Wdeclaration-after-statement,)
 VDSO_CFLAGS += $(call cc32-option,-Wno-pointer-sign)
 VDSO_CFLAGS += $(call cc32-option,-fno-strict-overflow)
-VDSO_CFLAGS += $(call cc32-option,-Werror=strict-prototypes)
-VDSO_CFLAGS += $(call cc32-option,-Werror=date-time)
-VDSO_CFLAGS += $(call cc32-option,-Werror=incompatible-pointer-types)
+VDSO_CFLAGS += $(call cc32-option,-Werror)
+VDSO_CFLAGS += $(call cc32-option,-Werror)
+VDSO_CFLAGS += $(call cc32-option,-Werror)
 
 # The 32-bit compiler does not provide 128-bit integers, which are used in
 # some headers that are indirectly included from the vDSO code.
@@ -178,31 +178,31 @@ $(asm-obj-vdso): %.o: %.S FORCE
 	$(call if_changed_dep,vdsoas)
 
 # Actual build commands
-quiet_cmd_vdsold_and_vdso_check = LD32    $@
-      cmd_vdsold_and_vdso_check = $(cmd_vdsold); $(cmd_vdso_check)
+quiet_cmd_vdsold_and_vdso_check = LD32 $@
+  cmd_vdsold_and_vdso_check = $(cmd_vdsold); $(cmd_vdso_check)
 
-quiet_cmd_vdsold = LD32    $@
-      cmd_vdsold = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_LDFLAGS) \
-                   -Wl,-T $(filter %.lds,$^) $(filter %.o,$^) -o $@
-quiet_cmd_vdsocc = CC32    $@
-      cmd_vdsocc = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_CFLAGS) -c -o $@ $<
-quiet_cmd_vdsocc_gettimeofday = CC32    $@
-      cmd_vdsocc_gettimeofday = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_CFLAGS) $(VDSO_CFLAGS_gettimeofday_o) -c -o $@ $<
-quiet_cmd_vdsoas = AS32    $@
-      cmd_vdsoas = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_AFLAGS) -c -o $@ $<
+quiet_cmd_vdsold = LD32 $@
+  cmd_vdsold = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_LDFLAGS) \
+     -Wl,-T $(filter %.lds,$^) $(filter %.o,$^) -o $@
+quiet_cmd_vdsocc = CC32 $@
+  cmd_vdsocc = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_CFLAGS) -c -o $@ $<
+quiet_cmd_vdsocc_gettimeofday = CC32 $@
+  cmd_vdsocc_gettimeofday = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_CFLAGS) $(VDSO_CFLAGS_gettimeofday_o) -c -o $@ $<
+quiet_cmd_vdsoas = AS32 $@
+  cmd_vdsoas = $(CC_COMPAT) -Wp,-MD,$(depfile) $(VDSO_AFLAGS) -c -o $@ $<
 
-quiet_cmd_vdsomunge = MUNGE   $@
-      cmd_vdsomunge = $(obj)/$(munge) $< $@
+quiet_cmd_vdsomunge = MUNGE $@
+  cmd_vdsomunge = $(obj)/$(munge) $< $@
 
 # Generate vDSO offsets using helper script (borrowed from the 64-bit vDSO)
 gen-vdsosym := $(srctree)/$(src)/../vdso/gen_vdso_offsets.sh
 quiet_cmd_vdsosym = VDSOSYM $@
 # The AArch64 nm should be able to read an AArch32 binary
-      cmd_vdsosym = $(NM) $< | $(gen-vdsosym) | LC_ALL=C sort > $@
+  cmd_vdsosym = $(NM) $< | $(gen-vdsosym) | LC_ALL=C sort > $@
 
 # Install commands for the unstripped file
 quiet_cmd_vdso_install = INSTALL $@
-      cmd_vdso_install = cp $(obj)/$@.dbg $(MODLIB)/vdso/vdso32.so
+  cmd_vdso_install = cp $(obj)/$@.dbg $(MODLIB)/vdso/vdso32.so
 
 vdso.so: $(obj)/vdso.so.dbg
 	@mkdir -p $(MODLIB)/vdso
