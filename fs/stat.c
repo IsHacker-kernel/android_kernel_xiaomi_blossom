@@ -17,7 +17,7 @@
 #include <linux/syscalls.h>
 #include <linux/pagemap.h>
 #include <linux/compat.h>
-#if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MOUNT)
+#if defined(CONFIG_KSU_SUSFS_SUS_KSTAT)
 #include <linux/susfs_def.h>
 #endif
 
@@ -25,15 +25,18 @@
 #include <asm/unistd.h>
 
 #ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
-extern void susfs_sus_kstat_spoof_generic_fillattr(struct inode *inode, struct kstat *stat);
-#endif
-
-#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
 extern void susfs_sus_ino_for_generic_fillattr(unsigned long ino, struct kstat *stat);
 #endif
 
-#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
-extern void susfs_sus_kstat_spoof_generic_fillattr(struct inode *inode, struct kstat *stat);
+#ifdef CONFIG_KSU_MANUAL_HOOK
+__attribute__((hot)) 
+extern int ksu_handle_stat(int *dfd, const char __user **filename_user,
+				int *flags);
+
+extern void ksu_handle_newfstat_ret(unsigned int *fd, struct stat __user **statbuf_ptr);
+#if defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_COMPAT_STAT64)
+extern void ksu_handle_fstat64_ret(unsigned long *fd, struct stat64 __user **statbuf_ptr);
+#endif
 #endif
 
 /**
@@ -47,7 +50,19 @@ extern void susfs_sus_kstat_spoof_generic_fillattr(struct inode *inode, struct k
  */
 void generic_fillattr(struct inode *inode, struct kstat *stat)
 {
-
+#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
+	if (inode->i_mapping &&
+		unlikely(test_bit(AS_FLAGS_SUS_KSTAT, &inode->i_mapping->flags)) &&
+		likely(susfs_is_current_proc_umounted_app()))
+	{
+		susfs_sus_ino_for_generic_fillattr(inode->i_ino, stat);
+		stat->mode = inode->i_mode;
+		stat->rdev = inode->i_rdev;
+		stat->uid = inode->i_uid;
+		stat->gid = inode->i_gid;
+		return;
+	}
+#endif
 	stat->dev = inode->i_sb->s_dev;
 	stat->ino = inode->i_ino;
 	stat->mode = inode->i_mode;
@@ -61,9 +76,6 @@ void generic_fillattr(struct inode *inode, struct kstat *stat)
 	stat->ctime = inode->i_ctime;
 	stat->blksize = i_blocksize(inode);
 	stat->blocks = inode->i_blocks;
-#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
-    susfs_sus_kstat_spoof_generic_fillattr(inode, stat);
-#endif
 
 	if (IS_NOATIME(inode))
 		stat->result_mask &= ~STATX_ATIME;
@@ -86,32 +98,23 @@ EXPORT_SYMBOL(generic_fillattr);
  * attributes to any user.  Any other code probably wants vfs_getattr.
  */
 int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
-              u32 request_mask, unsigned int query_flags)
+		      u32 request_mask, unsigned int query_flags)
 {
-    struct inode *inode = d_backing_inode(path->dentry);
+	struct inode *inode = d_backing_inode(path->dentry);
 
-    memset(stat, 0, sizeof(*stat));
-    stat->result_mask |= STATX_BASIC_STATS;
-    request_mask &= STATX_ALL;
-    query_flags &= KSTAT_QUERY_FLAGS;
-    if (inode->i_op->getattr)
-#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
-    {
-        int err = inode->i_op->getattr(path, stat, request_mask,
-                        query_flags);
-        if (!err)
-            susfs_sus_kstat_spoof_generic_fillattr(inode, stat);
-        return err;
-    }
-#else
-        return inode->i_op->getattr(path, stat, request_mask,
-                        query_flags);
-#endif
+	memset(stat, 0, sizeof(*stat));
+	stat->result_mask |= STATX_BASIC_STATS;
+	request_mask &= STATX_ALL;
+	query_flags &= KSTAT_QUERY_FLAGS;
+	if (inode->i_op->getattr)
+		return inode->i_op->getattr(path, stat, request_mask,
+					    query_flags);
 
-    generic_fillattr(inode, stat);
-    return 0;
+	generic_fillattr(inode, stat);
+	return 0;
 }
 EXPORT_SYMBOL(vfs_getattr_nosec);
+
 /*
  * vfs_getattr - Get the enhanced basic attributes of a file
  * @path: The file of interest
@@ -382,18 +385,13 @@ SYSCALL_DEFINE2(newlstat, const char __user *, filename,
 }
 
 #if !defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_SYS_NEWFSTATAT)
-#ifdef CONFIG_KSU
-extern __attribute__((hot)) int ksu_handle_stat(int *dfd,
-			const char __user **filename_user, int *flags);
-#endif
-
 SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 		struct stat __user *, statbuf, int, flag)
 {
 	struct kstat stat;
 	int error;
 
-#ifdef CONFIG_KSU
+#ifdef CONFIG_KSU_MANUAL_HOOK
 	ksu_handle_stat(&dfd, &filename, &flag);
 #endif
 
@@ -412,6 +410,9 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 	if (!error)
 		error = cp_new_stat(&stat, statbuf);
 
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_newfstat_ret(&fd, &statbuf);
+#endif
 	return error;
 }
 
@@ -538,6 +539,9 @@ SYSCALL_DEFINE2(fstat64, unsigned long, fd, struct stat64 __user *, statbuf)
 	if (!error)
 		error = cp_new_stat64(&stat, statbuf);
 
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_fstat64_ret(&fd, &statbuf);
+#endif
 	return error;
 }
 
@@ -546,6 +550,10 @@ SYSCALL_DEFINE4(fstatat64, int, dfd, const char __user *, filename,
 {
 	struct kstat stat;
 	int error;
+
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_stat(&dfd, &filename, &flag); /* 32-bit su support */
+#endif
 
 	error = vfs_fstatat(dfd, filename, &stat, flag);
 	if (error)
