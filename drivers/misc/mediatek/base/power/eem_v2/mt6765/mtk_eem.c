@@ -2287,18 +2287,18 @@ div_u64((unsigned long long)tscpu_get_temp_by_bank(THERMAL_BANK2), 1000);
 				continue;
 #endif
 			verr = 1;
-			aee_kernel_warning("mt_eem",
+		/*	aee_kernel_warning("mt_eem",
 				"@%s():%d; (%s) [%d] = [%x] > [%d] = [%x]\n",
 				__func__, __LINE__, ((char *)(det->name) + 8),
-				i, det->volt_tbl[i], i-1, det->volt_tbl[i-1]);
+				i, det->volt_tbl[i], i-1, det->volt_tbl[i-1]); */
 
-			aee_kernel_warning("mt_eem",
+		/*	aee_kernel_warning("mt_eem",
 	"@%s():%d; (%s) V30_[0x%x], V74_[0x%x], VD30_[0x%x], VD74_[0x%x]\n",
 			__func__, __LINE__, ((char *)(det->name) + 8),
 			eem_read(EEM_VOP30), eem_read(EEM_VOP74),
-			eem_read(EEM_VDESIGN30), eem_read(EEM_VDESIGN74));
+			eem_read(EEM_VDESIGN30), eem_read(EEM_VDESIGN74)); */
 
-			WARN_ON(det->volt_tbl[i] > det->volt_tbl[i-1]);
+			//WARN_ON(det->volt_tbl[i] > det->volt_tbl[i-1]);
 		}
 
 		/*

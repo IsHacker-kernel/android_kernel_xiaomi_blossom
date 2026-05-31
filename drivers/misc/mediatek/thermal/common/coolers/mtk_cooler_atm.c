@@ -771,6 +771,8 @@ static void atm_profile_gpu_power_limit(s64 latest_latency)
 
 static void set_adaptive_cpu_power_limit(unsigned int limit)
 {
+	tscpu_dprintk("DBG: %u", limit);
+	/*
 #ifdef CONFIG_MTK_TINYSYS_SSPM_SUPPORT
 #if THERMAL_ENABLE_TINYSYS_SSPM && CPT_ADAPTIVE_AP_COOLER &&	\
 	PRECISE_HYBRID_POWER_BUDGET && CONTINUOUS_TM
@@ -793,7 +795,7 @@ static void set_adaptive_cpu_power_limit(unsigned int limit)
 		ktime_t now, delta;
 #endif
 
-		/* print debug log */
+
 		adaptive_limit[print_cunt][0] =
 			(int) (adaptive_cpu_power_limit != 0x7FFFFFFF) ?
 						adaptive_cpu_power_limit : 0;
@@ -850,11 +852,13 @@ static void set_adaptive_cpu_power_limit(unsigned int limit)
 	PRECISE_HYBRID_POWER_BUDGET && CONTINUOUS_TM
 	mutex_unlock(&atm_cpu_lmt_mutex);
 #endif
-#endif
+#endif*/
 }
 
 static void set_adaptive_gpu_power_limit(unsigned int limit)
 {
+	/*
+tscpu_dprintk("DBG: %u", limit);
 #ifdef CONFIG_MTK_TINYSYS_SSPM_SUPPORT
 #if THERMAL_ENABLE_TINYSYS_SSPM && CPT_ADAPTIVE_AP_COOLER &&	\
 	PRECISE_HYBRID_POWER_BUDGET && CONTINUOUS_TM
@@ -903,11 +907,14 @@ static void set_adaptive_gpu_power_limit(unsigned int limit)
 	mutex_unlock(&atm_gpu_lmt_mutex);
 #endif
 #endif
+*/
 }
 
 #if defined(THERMAL_VPU_SUPPORT)
 static void set_adaptive_vpu_power_limit(unsigned int limit)
 {
+	/*
+tscpu_dprintk("DBG: %u", limit);
 #ifdef CONFIG_MTK_TINYSYS_SSPM_SUPPORT
 #if THERMAL_ENABLE_TINYSYS_SSPM && CPT_ADAPTIVE_AP_COOLER && \
 		PRECISE_HYBRID_POWER_BUDGET && CONTINUOUS_TM
@@ -939,12 +946,15 @@ static void set_adaptive_vpu_power_limit(unsigned int limit)
 	mutex_unlock(&atm_vpu_lmt_mutex);
 #endif
 #endif
+*/
 }
 #endif
 
 #if defined(THERMAL_MDLA_SUPPORT)
 static void set_adaptive_mdla_power_limit(unsigned int limit)
 {
+	/*
+tscpu_dprintk("DBG: %u", limit);
 #ifdef CONFIG_MTK_TINYSYS_SSPM_SUPPORT
 #if THERMAL_ENABLE_TINYSYS_SSPM && CPT_ADAPTIVE_AP_COOLER &&	\
 	PRECISE_HYBRID_POWER_BUDGET && CONTINUOUS_TM
@@ -976,6 +986,7 @@ static void set_adaptive_mdla_power_limit(unsigned int limit)
 	mutex_unlock(&atm_mdla_lmt_mutex);
 #endif
 #endif
+*/
 }
 #endif
 
@@ -1266,6 +1277,7 @@ static int P_adaptive(int total_power, unsigned int gpu_loading)
 #if defined(THERMAL_MDLA_SUPPORT)
 		set_adaptive_mdla_power_limit(0);
 #endif
+
 #if (CONFIG_THERMAL_AEE_RR_REC == 1)
 		aee_rr_rec_thermal_ATM_status(ATM_DONE);
 #endif
@@ -1416,18 +1428,18 @@ static int P_adaptive(int total_power, unsigned int gpu_loading)
 		set_adaptive_cpu_power_limit(cpu_power);
 
 	if ((gpu_power != last_gpu_power) && (mtk_gpu_power != NULL)) {
-		/* Work-around for unsync GPU power table problem 1. */
 		if (gpu_power >= mtk_gpu_power[gpu_max_opp].gpufreq_power)
 			set_adaptive_gpu_power_limit(0);
 		else
 			set_adaptive_gpu_power_limit(gpu_power);
 	}
 
+
 	tscpu_dprintk("%s cpu %d, gpu %d\n", __func__, cpu_power, gpu_power);
 
 #if defined(THERMAL_VPU_SUPPORT)
 	/*APU hint*/
-#if defined(THERMAL_APU_UNLIMIT)
+/*#if defined(THERMAL_APU_UNLIMIT)
 	if (cl_get_apu_status() == 1) {
 		set_adaptive_vpu_power_limit(0);
 	} else {
@@ -1446,12 +1458,13 @@ static int P_adaptive(int total_power, unsigned int gpu_loading)
 			set_adaptive_vpu_power_limit(vpu_power);
 	}
 #endif
+*/
 	tscpu_dprintk("%s vpu %d\n",
 		__func__, vpu_power);
 #endif
 #if defined(THERMAL_MDLA_SUPPORT)
 	/*APU hint*/
-#if defined(THERMAL_APU_UNLIMIT)
+/*#if defined(THERMAL_APU_UNLIMIT)
 	if (cl_get_apu_status() == 1) {
 		set_adaptive_mdla_power_limit(0);
 	} else {
@@ -1470,6 +1483,7 @@ static int P_adaptive(int total_power, unsigned int gpu_loading)
 			set_adaptive_mdla_power_limit(mdla_power);
 	}
 #endif
+*/
 	tscpu_dprintk("%s mdla %d\n",
 		__func__, mdla_power);
 #endif
@@ -1691,8 +1705,8 @@ static int _adaptive_power_ppb
 			tscpu_dprintk("%s Tp %ld, Tc %ld, Pt %d\n", __func__,
 					prev_temp, curr_temp, total_power);
 
-			return P_adaptive(0, 0);
-#if THERMAL_HEADROOM
+			return P_adaptive(0, 0); }
+/*#if THERMAL_HEADROOM
 		} else {
 			if (thp_max_cpu_power != 0)
 				set_adaptive_cpu_power_limit(
@@ -1704,6 +1718,7 @@ static int _adaptive_power_ppb
 #else
 		}
 #endif
+*/
 		/* reset_gpu_power_history(); */
 	}
 
@@ -1928,7 +1943,7 @@ static int _adaptive_power
 				      total_power);
 			return P_adaptive(0, 0);
 		}
-#if THERMAL_HEADROOM
+/*#if THERMAL_HEADROOM
 		else {
 			if (thp_max_cpu_power != 0)
 				set_adaptive_cpu_power_limit((unsigned int)
@@ -1938,6 +1953,7 @@ static int _adaptive_power
 				set_adaptive_cpu_power_limit(0);
 		}
 #endif
+*/
 	}
 #endif
 	else {
@@ -1949,7 +1965,7 @@ static int _adaptive_power
 
 			return P_adaptive(0, 0);
 		}
-#if THERMAL_HEADROOM
+/*#if THERMAL_HEADROOM
 		else {
 			if (thp_max_cpu_power != 0)
 				set_adaptive_cpu_power_limit((unsigned int)
@@ -1959,6 +1975,7 @@ static int _adaptive_power
 				set_adaptive_cpu_power_limit(0);
 		}
 #endif
+*/
 	}
 
 	return 0;
@@ -2945,8 +2962,8 @@ static ssize_t atm_sspm_write
 			atm_update_ttj_to_sspm();
 			atm_enable_atm_in_sspm(1);
 			atm_sspm_enabled = 1;
-			set_adaptive_cpu_power_limit(0);
-			set_adaptive_gpu_power_limit(0);
+		//	set_adaptive_cpu_power_limit(0);
+		//	set_adaptive_gpu_power_limit(0);
 		}
 
 		return count;
