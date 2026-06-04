@@ -5,6 +5,7 @@
 
 #include <crypto/blake2s.h>
 #include <linux/string.h>
+#include <wg-custom/wgcustom.h>
 
 /*
  * blake2s_testvecs[] generated with the program below (using libb2-dev and
