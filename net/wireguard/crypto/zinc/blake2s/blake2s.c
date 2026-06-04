@@ -8,7 +8,6 @@
  *
  */
 
-#include <wg-custom/wgcustom.h>
 #include <zinc/blake2s.h>
 #include "../selftest/run.h"
 

@@ -11,7 +11,6 @@
 #include "timers.h"
 
 #include <zinc/blake2s.h>
-#include <wg-custom/wgcustom.h>
 #include <zinc/chacha20poly1305.h>
 
 #include <net/ipv6.h>

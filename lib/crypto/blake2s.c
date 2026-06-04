@@ -8,7 +8,6 @@
  *
  */
 
-#include <wg-custom/wgcustom.h>
 #include <crypto/internal/blake2s.h>
 #include <linux/types.h>
 #include <linux/string.h>
