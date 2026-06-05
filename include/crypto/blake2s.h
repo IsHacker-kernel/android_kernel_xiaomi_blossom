@@ -10,9 +10,8 @@
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/string.h>
-#include <wg-custom/wgcustom.h>
 
-enum blake2s_lengths {
+static enum blake2s_lengths {
 	BLAKE2S_BLOCK_SIZE = 64,
 	BLAKE2S_HASH_SIZE = 32,
 	BLAKE2S_KEY_SIZE = 32,
@@ -21,6 +20,15 @@ enum blake2s_lengths {
 	BLAKE2S_160_HASH_SIZE = 20,
 	BLAKE2S_224_HASH_SIZE = 28,
 	BLAKE2S_256_HASH_SIZE = 32,
+};
+
+static struct blake2s_state {
+	u32 h[8];
+	u32 t[2];
+	u32 f[2];
+	u8 buf[BLAKE2S_BLOCK_SIZE];
+	unsigned int buflen;
+	unsigned int outlen;
 };
 
 enum blake2s_iv {
@@ -33,6 +41,9 @@ enum blake2s_iv {
 	BLAKE2S_IV6 = 0x1F83D9ABUL,
 	BLAKE2S_IV7 = 0x5BE0CD19UL,
 };
+
+static void blake2s_update(struct blake2s_state *state, const u8 *in, size_t inlen);
+static void blake2s_final(struct blake2s_state *state, u8 *out);
 
 static inline void blake2s_init_param(struct blake2s_state *state,
 				      const u32 param)
@@ -67,6 +78,25 @@ static inline void blake2s_init_key(struct blake2s_state *state,
 	memcpy(state->buf, key, keylen);
 	state->buflen = BLAKE2S_BLOCK_SIZE;
 	state->outlen = outlen;
+}
+
+static inline void blake2s(u8 *out, const u8 *in, const u8 *key,
+			   const size_t outlen, const size_t inlen,
+			   const size_t keylen)
+{
+	struct blake2s_state state;
+
+	WARN_ON(IS_ENABLED(DEBUG) && ((!in && inlen > 0) || !out || !outlen ||
+		outlen > BLAKE2S_HASH_SIZE || keylen > BLAKE2S_KEY_SIZE ||
+		(!key && keylen)));
+
+	if (keylen)
+		blake2s_init_key(&state, outlen, key, keylen);
+	else
+		blake2s_init(&state, outlen);
+
+	blake2s_update(&state, in, inlen);
+	blake2s_final(&state, out);
 }
 
 #endif /* _CRYPTO_BLAKE2S_H */
