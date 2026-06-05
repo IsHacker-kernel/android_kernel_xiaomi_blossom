@@ -23,15 +23,6 @@ enum blake2s_lengths {
 	BLAKE2S_256_HASH_SIZE = 32,
 };
 
-struct blake2s_state {
-	u32 h[8];
-	u32 t[2];
-	u32 f[2];
-	u8 buf[BLAKE2S_BLOCK_SIZE];
-	unsigned int buflen;
-	unsigned int outlen;
-};
-
 enum blake2s_iv {
 	BLAKE2S_IV0 = 0x6A09E667UL,
 	BLAKE2S_IV1 = 0xBB67AE85UL,

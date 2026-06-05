@@ -3,6 +3,15 @@
 
 #include <crypto/internal/blake2s.h>
 
+struct blake2s_state {
+	u32 h[8];
+	u32 t[2];
+	u32 f[2];
+	u8 buf[BLAKE2S_BLOCK_SIZE];
+	unsigned int buflen;
+	unsigned int outlen;
+};
+
 void blake2s_update(struct blake2s_state *state, const u8 *in, size_t inlen);
 void blake2s_final(struct blake2s_state *state, u8 *out);
 
