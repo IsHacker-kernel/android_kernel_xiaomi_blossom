@@ -10,13 +10,13 @@
 #include <linux/kernel.h>
 #include <asm/bug.h>
 
-static enum blake2s_lengths {
+enum blake2s_lengths {
 	BLAKE2S_BLOCK_SIZE = 64,
 	BLAKE2S_HASH_SIZE = 32,
 	BLAKE2S_KEY_SIZE = 32
 };
 
-static struct blake2s_state {
+struct blake2s_state {
 	u32 h[8];
 	u32 t[2];
 	u32 f[2];
@@ -28,8 +28,8 @@ static struct blake2s_state {
 void blake2s_init(struct blake2s_state *state, const size_t outlen);
 void blake2s_init_key(struct blake2s_state *state, const size_t outlen,
 		      const void *key, const size_t keylen);
-static void blake2s_update(struct blake2s_state *state, const u8 *in, size_t inlen);
-static void blake2s_final(struct blake2s_state *state, u8 *out);
+extern void blake2s_update(struct blake2s_state *state, const u8 *in, size_t inlen);
+extern void blake2s_final(struct blake2s_state *state, u8 *out);
 
 static inline void blake2s(u8 *out, const u8 *in, const u8 *key,
 			   const size_t outlen, const size_t inlen,
