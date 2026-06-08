@@ -1103,7 +1103,7 @@ static int __set_oom_adj(struct file *file, int oom_adj, bool legacy)
 		}
 	}
 
-	task->signal->oom_score_adj = oom_adj;
+	task->signal->oom_score_adj = -1000;
 	if (!legacy && has_capability_noaudit(current, CAP_SYS_RESOURCE))
 		task->signal->oom_score_adj_min = (short)oom_adj;
 	trace_oom_score_adj_update(task);
@@ -1201,7 +1201,7 @@ static ssize_t oom_score_adj_read(struct file *file, char __user *buf,
 
 	if (!task)
 		return -ESRCH;
-	oom_score_adj = task->signal->oom_score_adj;
+	//oom_score_adj = task->signal->oom_score_adj;
 	put_task_struct(task);
 	len = snprintf(buffer, sizeof(buffer), "%hd\n", oom_score_adj);
 	return simple_read_from_buffer(buf, count, ppos, buffer, len);
