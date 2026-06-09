@@ -18,7 +18,7 @@ int prog(struct pt_regs *ctx)
 	struct task_struct *tsk;
 	char oldcomm[16] = {};
 	char newcomm[16] = {};
-	u16 oom_score_adj;
+	u16 oom_score_adj_n;
 	u32 pid;
 
 	tsk = (void *)PT_REGS_PARM1(ctx);
@@ -27,7 +27,7 @@ int prog(struct pt_regs *ctx)
 	bpf_probe_read(oldcomm, sizeof(oldcomm), &tsk->comm);
 	bpf_probe_read(newcomm, sizeof(newcomm), (void *)PT_REGS_PARM2(ctx));
 	signal = _(tsk->signal);
-	oom_score_adj = _(signal->oom_score_adj);
+	oom_score_adj_n = _(signal->oom_score_adj_n);
 	return 0;
 }
 

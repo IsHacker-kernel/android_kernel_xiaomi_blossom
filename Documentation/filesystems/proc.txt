@@ -33,7 +33,7 @@ Table of Contents
   2	Modifying System Parameters
 
   3	Per-Process Parameters
-  3.1	/proc/<pid>/oom_adj & /proc/<pid>/oom_score_adj - Adjust the oom-killer
+  3.1	/proc/<pid>/oom_adj & /proc/<pid>/oom_score_adj_n - Adjust the oom-killer
 								score
   3.2	/proc/<pid>/oom_score - Display current oom-killer score
   3.3	/proc/<pid>/io - Display the IO accounting fields
@@ -1487,7 +1487,7 @@ of the kernel.
 CHAPTER 3: PER-PROCESS PARAMETERS
 ------------------------------------------------------------------------------
 
-3.1 /proc/<pid>/oom_adj & /proc/<pid>/oom_score_adj- Adjust the oom-killer score
+3.1 /proc/<pid>/oom_adj & /proc/<pid>/oom_score_adj_n- Adjust the oom-killer score
 --------------------------------------------------------------------------------
 
 These file can be used to adjust the badness heuristic used to select which
@@ -1512,7 +1512,7 @@ limit (or swap limit) being reached, the allowed memory is that configured
 limit.  Finally, if it is due to the entire system being out of memory, the
 allowed memory represents all allocatable resources.
 
-The value of /proc/<pid>/oom_score_adj is added to the badness score before it
+The value of /proc/<pid>/oom_score_adj_n is added to the badness score before it
 is used to determine which task to kill.  Acceptable values range from -1000
 (OOM_SCORE_ADJ_MIN) to +1000 (OOM_SCORE_ADJ_MAX).  This allows userspace to
 polarize the preference for oom killing either by always preferring a certain
@@ -1521,7 +1521,7 @@ equivalent to disabling oom killing entirely for that task since it will always
 report a badness score of 0.
 
 Consequently, it is very simple for userspace to define the amount of memory to
-consider for each task.  Setting a /proc/<pid>/oom_score_adj value of +500, for
+consider for each task.  Setting a /proc/<pid>/oom_score_adj_n value of +500, for
 example, is roughly equivalent to allowing the remainder of tasks sharing the
 same system, cpuset, mempolicy, or memory controller resources to use at least
 50% more memory.  A value of -500, on the other hand, would be roughly
@@ -1532,9 +1532,9 @@ For backwards compatibility with previous kernels, /proc/<pid>/oom_adj may also
 be used to tune the badness score.  Its acceptable values range from -16
 (OOM_ADJUST_MIN) to +15 (OOM_ADJUST_MAX) and a special value of -17
 (OOM_DISABLE) to disable oom killing entirely for that task.  Its value is
-scaled linearly with /proc/<pid>/oom_score_adj.
+scaled linearly with /proc/<pid>/oom_score_adj_n.
 
-The value of /proc/<pid>/oom_score_adj may be reduced no lower than the last
+The value of /proc/<pid>/oom_score_adj_n may be reduced no lower than the last
 value set by a CAP_SYS_RESOURCE process. To reduce the value any lower
 requires CAP_SYS_RESOURCE.
 
@@ -1548,7 +1548,7 @@ minimal amount of work.
 -------------------------------------------------------------
 
 This file can be used to check the current score used by the oom-killer is for
-any given <pid>. Use it together with /proc/<pid>/oom_score_adj to tune which
+any given <pid>. Use it together with /proc/<pid>/oom_score_adj_n to tune which
 process should be killed in an out-of-memory situation.
 
 

@@ -5655,7 +5655,7 @@ static bool task_is_unity_game(struct task_struct *p)
 	bool ret = false;
 
 	/* Filter for Android user applications (i.e., positive adj) */
-	if (p->signal->oom_score_adj >= 0) {
+	if (p->signal->oom_score_adj_n >= 0) {
 		rcu_read_lock();
 		for_each_thread(p, t) {
 			/* Check for a UnityMain thread in the thread group */

@@ -1129,7 +1129,7 @@ PAGE_SIZE multiple when read back.
 	together or not at all. This can be used to avoid
 	partial kills to guarantee workload integrity.
 
-	Tasks with the OOM protection (oom_score_adj set to -1000)
+	Tasks with the OOM protection (oom_score_adj_n set to -1000)
 	are treated as an exception and are never killed.
 
 	If the OOM killer is invoked in a cgroup, it's not going

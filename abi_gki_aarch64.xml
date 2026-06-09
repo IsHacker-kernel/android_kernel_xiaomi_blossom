@@ -13787,10 +13787,10 @@
           <var-decl name='oom_flag_origin' type-id='type-id-185' visibility='default' filepath='include/linux/sched/signal.h' line='226' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='7696'>
-          <var-decl name='oom_score_adj' type-id='type-id-104' visibility='default' filepath='include/linux/sched/signal.h' line='227' column='1'/>
+          <var-decl name='oom_score_adj_n' type-id='type-id-104' visibility='default' filepath='include/linux/sched/signal.h' line='227' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='7712'>
-          <var-decl name='oom_score_adj_min' type-id='type-id-104' visibility='default' filepath='include/linux/sched/signal.h' line='228' column='1'/>
+          <var-decl name='oom_score_adj_n_min' type-id='type-id-104' visibility='default' filepath='include/linux/sched/signal.h' line='228' column='1'/>
         </data-member>
         <data-member access='public' layout-offset-in-bits='7744'>
           <var-decl name='oom_mm' type-id='type-id-304' visibility='default' filepath='include/linux/sched/signal.h' line='230' column='1'/>
