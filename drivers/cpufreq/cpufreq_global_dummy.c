@@ -57,16 +57,16 @@ static const struct sysfs_ops cpufreq_dummy_sysfs_ops = {
 	.store	= cpufreq_dummy_store,
 };
 
-static struct kobj_type ktype_dummy_cpufreq = {
-	.sysfs_ops	= &cpufreq_dummy_sysfs_ops,
-	.default_attrs	= default_cpufreq_dummy_attrs,
-	.release	= cpufreq_dummy_sysfs_release,
-};
-
 static void cpufreq_dummy_sysfs_release(struct kobject *kobj)
 {
 	printk("CPUFREQ dummy object destroyed.");
 }
+
+static struct kobj_type ktype_dummy_cpufreq = {
+	.sysfs_ops	= &cpufreq_dummy_sysfs_ops,
+	.default_attrs	= default_cpufreq_dummy_attrs,
+	.release	= &cpufreq_dummy_sysfs_release,
+};
 
 static int __init cpufreq_dummy_init(void) {
 	int p0;
