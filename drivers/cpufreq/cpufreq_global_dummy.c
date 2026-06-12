@@ -65,7 +65,7 @@ static void cpufreq_dummy_sysfs_release(struct kobject *kobj)
 static struct kobj_type ktype_dummy_cpufreq = {
 	.sysfs_ops	= &cpufreq_dummy_sysfs_ops,
 	.default_attrs	= default_cpufreq_dummy_attrs,
-	.release	= &cpufreq_dummy_sysfs_release,
+	.release	= cpufreq_dummy_sysfs_release,
 };
 
 static int __init cpufreq_dummy_init(void) {
