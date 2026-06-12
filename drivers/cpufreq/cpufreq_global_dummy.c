@@ -74,9 +74,9 @@ static int __init cpufreq_dummy_init(void) {
 
 	cpufreq_global_dummy_kobject = kobject_create_and_add("cpufreq", &cpu_subsys.dev_root->kobj);
 
-	p0 = kobject_create_and_add(&cpufreq_p0_dummy_kobj, &ktype_dummy_cpufreq,
+	p0 = kobject_init_and_add(&cpufreq_p0_dummy_kobj, &ktype_dummy_cpufreq,
 				   cpufreq_global_dummy_kobject, "policy0");
-	p4 = kobject_create_and_add(&cpufreq_p4_dummy_kobj, &ktype_dummy_cpufreq,
+	p4 = kobject_init_and_add(&cpufreq_p4_dummy_kobj, &ktype_dummy_cpufreq,
 				   cpufreq_global_dummy_kobject, "policy4");
 	if (p0)
 		return -ENOMEM;
