@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 # CPUfreq core
 obj-$(CONFIG_CPU_FREQ)			+= cpufreq.o freq_table.o
+obj-y		+= cpufreq_global_dummy.o
 
 # CPUfreq stats
 obj-$(CONFIG_CPU_FREQ_STAT)             += cpufreq_stats.o
@@ -21,7 +22,6 @@ obj-$(CONFIG_CPUFREQ_DT)		+= cpufreq-dt.o
 obj-$(CONFIG_CPUFREQ_DT_PLATDEV)	+= cpufreq-dt-platdev.o
 
 obj-$(CONFIG_CPUFREQ_DUMMY)		+= dummy-cpufreq.o
-obj-$(CONFIG_CPUFREQ_DUMMY_LIBPERFMGR)		+= cpufreq_global_dummy.o
 
 ##################################################################################
 # x86 drivers.

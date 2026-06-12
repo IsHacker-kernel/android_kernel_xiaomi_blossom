@@ -83,6 +83,8 @@ static int __init cpufreq_dummy_init(void) {
 	if (p4)
 		return -ENOMEM;
 
+	printk("CPUFREQ dummy object created.");
+
 	return 0;
 }
 
