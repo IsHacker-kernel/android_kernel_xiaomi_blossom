@@ -758,12 +758,12 @@ static int debugfs_atomic_t_get(void *data, u64 *val)
 	*val = atomic_read((atomic_t *)data);
 	return 0;
 }
-DEFINE_DEBUGFS_ATTRIBUTE_SIGNED(fops_atomic_t, debugfs_atomic_t_get,
+/*DEFINE_DEBUGFS_ATTRIBUTE_SIGNED(fops_atomic_t, debugfs_atomic_t_get,
 			debugfs_atomic_t_set, "%lld\n");
 DEFINE_DEBUGFS_ATTRIBUTE_SIGNED(fops_atomic_t_ro, debugfs_atomic_t_get, NULL,
 			"%lld\n");
 DEFINE_DEBUGFS_ATTRIBUTE_SIGNED(fops_atomic_t_wo, NULL, debugfs_atomic_t_set,
-			"%lld\n");
+			"%lld\n");*/
 
 /**
  * debugfs_create_atomic_t - create a debugfs file that is used to read and
@@ -776,14 +776,14 @@ DEFINE_DEBUGFS_ATTRIBUTE_SIGNED(fops_atomic_t_wo, NULL, debugfs_atomic_t_set,
  * @value: a pointer to the variable that the file should read to and write
  *         from.
  */
-struct dentry *debugfs_create_atomic_t(const char *name, umode_t mode,
+/*struct dentry *debugfs_create_atomic_t(const char *name, umode_t mode,
 				 struct dentry *parent, atomic_t *value)
 {
 	return debugfs_create_mode_unsafe(name, mode, parent, value,
 					&fops_atomic_t, &fops_atomic_t_ro,
 					&fops_atomic_t_wo);
 }
-EXPORT_SYMBOL_GPL(debugfs_create_atomic_t);
+EXPORT_SYMBOL_GPL(debugfs_create_atomic_t);*/
 
 ssize_t debugfs_read_file_bool(struct file *file, char __user *user_buf,
 			       size_t count, loff_t *ppos)
