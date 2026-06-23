@@ -446,7 +446,6 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-
 #if 0
 static int disp_irq_log_kthread_func(void *data)
 {

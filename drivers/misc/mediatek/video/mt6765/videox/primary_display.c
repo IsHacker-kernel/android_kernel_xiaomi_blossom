@@ -101,8 +101,6 @@
 
 #define _DEBUG_DITHER_HANG_
 
-#define FRM_UPDATE_SEQ_CACHE_NUM (DISP_INTERNAL_BUFFER_COUNT+1)
-
 static struct disp_internal_buffer_info
 	*decouple_buffer_info[DISP_INTERNAL_BUFFER_COUNT];
 static struct RDMA_CONFIG_STRUCT decouple_rdma_config;
@@ -112,36 +110,6 @@ static unsigned int primary_display_set_sess_mode;
 atomic_t hwc_configing = ATOMIC_INIT(0);
 static unsigned int primary_session_id =
 	MAKE_DISP_SESSION(DISP_SESSION_PRIMARY, 0);
-static struct disp_frm_seq_info frm_update_sequence[FRM_UPDATE_SEQ_CACHE_NUM];
-static unsigned int frm_update_cnt;
-static unsigned int gPresentFenceIndex;
-/* 0: normal, 1: lcd only, 2: none of lcd and lcm */
-unsigned int gTriggerDispMode;
-static unsigned int g_keep;
-static unsigned int g_skip;
-int g_idle_skip;
-int g_idle_skip_trigger;
-/*DynFPS for debug*/
-bool g_force_cfg;
-unsigned int g_force_cfg_id;
-#if 0 //def CONFIG_TRUSTONIC_TRUSTED_UI
-static struct switch_dev disp_switch_data;
-#endif
-
-#if 0
-/* global variable for idle manager */
-static unsigned long long idlemgr_last_kick_time = ~(0ULL);
-static int session_mode_before_enter_idle;
-static int is_primary_idle;
-static struct task_struct *primary_display_idlemgr_task;
-static DECLARE_WAIT_QUEUE_HEAD(idlemgr_wait_queue);
-#endif
-
-static struct hrtimer cmd_mode_update_timer;
-#if 0 /* defined but not used */
-static ktime_t cmd_mode_update_timer_period;
-#endif
-static int is_fake_timer_inited;
 
 #ifdef MTK_FB_ION_SUPPORT
 static struct task_struct *present_fence_release_worker_task;
@@ -161,9 +129,6 @@ struct mtk_pm_qos_request primary_display_mm_freq_request;
 static int decouple_mirror_update_rdma_config_thread(void *data);
 static int decouple_trigger_worker_thread(void *data);
 
-struct task_struct *primary_display_frame_update_task;
-wait_queue_head_t primary_display_frame_update_wq;
-atomic_t primary_display_frame_update_event = ATOMIC_INIT(0);
 enum DISP_PRIMARY_PATH_MODE primary_display_mode = DIRECT_LINK_MODE;
 int primary_display_def_dst_mode;
 int primary_display_cur_dst_mode;
@@ -636,18 +601,6 @@ struct fps_ctx_t {
 	int is_inited;
 } primary_fps_ctx;
 
-#define INTERVAL_MS	10000	/* 10 sec */
-struct fps_ext_ctx_t {
-	unsigned long long last_trig;
-	unsigned long long total;
-	unsigned long long interval;	/* ns */
-	unsigned int fps;
-	unsigned int stable;
-	unsigned int frequency;
-	struct mutex lock;
-	int is_inited;
-} primary_fps_ext_ctx;
-
 #if 0 /* defined but not used */
 static struct task_struct *fps_monitor;
 static int fps_monitor_thread(void *data);
@@ -838,144 +791,6 @@ static int fps_ctx_set_wnd_sz(struct fps_ctx_t *fps_ctx, unsigned int wnd_sz)
 	return 0;
 }
 
-static int fps_ext_ctx_init(struct fps_ext_ctx_t *fps_ctx, unsigned int ms)
-{
-	if (disp_helper_get_option(DISP_OPT_FPS_EXT) == 0)
-		return 0;
-
-	if (fps_ctx == NULL) {
-		DISPERR("%s:%d, fps_cxt is null\n", __func__, __LINE__);
-		return -1;
-	}
-	if (ms > INTERVAL_MS) {
-		DISPWARN("%s:%d, interval is too big:%d ms, max:%d ms\n",
-			__func__, __LINE__, ms, INTERVAL_MS);
-		return -1;
-	}
-	if (ms == 0) {
-		DISPWARN("%s:%d, interval is equal to zero\n",
-			__func__, __LINE__);
-		return -1;
-	}
-
-	if (fps_ctx->is_inited)
-		return 0;
-
-	memset(fps_ctx, 0, sizeof(*fps_ctx));
-	mutex_init(&fps_ctx->lock);
-	fps_ctx->interval = (unsigned long long)ms * 1000;	/* ms to us */
-	fps_ctx->frequency = INTERVAL_MS / ms;	/* ms to frequency */
-
-	fps_ctx->is_inited = 1;
-
-	return 0;
-}
-
-void (*display_time_fps_stablizer)(unsigned long long ts);
-
-static int fps_ext_ctx_update(struct fps_ext_ctx_t *fps_ctx)
-{
-	unsigned long long ns = sched_clock();
-	unsigned long long delta_us;	/* us */
-	unsigned long long fps;
-
-	if (disp_helper_get_option(DISP_OPT_FPS_EXT) == 0)
-		return 0;
-
-	if (fps_ctx == NULL) {
-		DISPERR("%s:%d, fps_cxt is null\n", __func__, __LINE__);
-		return -1;
-	}
-	if (display_time_fps_stablizer)
-		display_time_fps_stablizer(ns);
-
-	mutex_lock(&fps_ctx->lock);
-	fps_ctx->total++;
-
-	delta_us = ns - fps_ctx->last_trig;
-	do_div(delta_us, 1000);
-	if (delta_us > fps_ctx->interval) {
-		/* calculate fps */
-		fps = fps_ctx->interval * fps_ctx->total * fps_ctx->frequency;
-		do_div(fps, delta_us);
-		do_div(fps, INTERVAL_MS / 1000);
-		fps_ctx->fps = (unsigned int)fps;
-		fps_ctx->last_trig = ns;
-
-		/* reset frame count */
-		fps_ctx->total = 0;
-		fps_ctx->stable = 0;
-	}
-
-	mmprofile_log_ex(ddp_mmp_get_events()->fps_ext_set,
-		MMPROFILE_FLAG_PULSE, fps_ctx->fps, fps_ctx->stable);
-	mutex_unlock(&fps_ctx->lock);
-
-	return 0;
-}
-
-static int fps_ext_ctx_get_fps(struct fps_ext_ctx_t *fps_ctx,
-	unsigned int *fps, int *stable)
-{
-	if (disp_helper_get_option(DISP_OPT_FPS_EXT) == 0)
-		return 0;
-
-	if (fps_ctx == NULL) {
-		DISPERR("%s:%d, fps_cxt is null\n", __func__, __LINE__);
-		return -1;
-	}
-	if (fps == NULL) {
-		DISPERR("%s:%d, fps is null\n", __func__, __LINE__);
-		return -1;
-	}
-	if (stable == NULL) {
-		DISPERR("%s:%d, stable is null\n", __func__, __LINE__);
-		return -1;
-	}
-
-	mutex_lock(&fps_ctx->lock);
-	*fps = fps_ctx->fps;
-	*stable = fps_ctx->stable;
-
-	mmprofile_log_ex(ddp_mmp_get_events()->fps_ext_get,
-		MMPROFILE_FLAG_PULSE, fps_ctx->fps, fps_ctx->stable);
-	mutex_unlock(&fps_ctx->lock);
-
-	return 0;
-}
-
-static int fps_ext_ctx_set_interval(struct fps_ext_ctx_t *fps_ctx,
-	unsigned int ms)
-{
-	if (fps_ctx == NULL) {
-		DISPERR("%s:%d, fps_cxt is null\n", __func__, __LINE__);
-		return -1;
-	}
-
-	if (!fps_ctx->is_inited)
-		return fps_ext_ctx_init(fps_ctx, ms);
-
-	if (ms > INTERVAL_MS) {
-		DISPWARN("%s:%d, interval is too big:%d ms, max:%d ms\n",
-			__func__, __LINE__, ms, INTERVAL_MS);
-		return -1;
-	}
-	if (ms == 0) {
-		DISPWARN("%s:%d, interval is equal to zero\n",
-			__func__, __LINE__);
-		return -1;
-	}
-
-	mutex_lock(&fps_ctx->lock);
-
-	fps_ctx->total = 0;
-	fps_ctx->interval = (unsigned long long)ms * 1000;	/* ms to us */
-	fps_ctx->frequency = INTERVAL_MS / ms;	/* ms to frequency */
-
-	mutex_unlock(&fps_ctx->lock);
-	return 0;
-}
-
 int primary_fps_ctx_set_wnd_sz(unsigned int wnd_sz)
 {
 	return fps_ctx_set_wnd_sz(&primary_fps_ctx, wnd_sz);
@@ -984,11 +799,6 @@ int primary_fps_ctx_set_wnd_sz(unsigned int wnd_sz)
 int primary_fps_ctx_get_fps(unsigned int *fps, int *stable)
 {
 	return fps_ctx_get_fps(&primary_fps_ctx, fps, stable);
-}
-
-int primary_fps_ext_ctx_set_interval(unsigned int interval)
-{
-	return fps_ext_ctx_set_interval(&primary_fps_ext_ctx, interval);
 }
 
 #if 0 /* defined but not used */
@@ -1018,53 +828,6 @@ int primary_display_get_dvfs_last_req(void)
 /*********************** fps calculate finish ********************************/
 
 /*********************** idle manager ****************************************/
-int primary_display_get_debug_state(char *stringbuf, int buf_len)
-{
-	int len = 0;
-	struct LCM_PARAMS *lcm_param = disp_lcm_get_params(pgc->plcm);
-	struct LCM_DRIVER *lcm_drv = pgc->plcm->drv;
-
-	len += scnprintf(stringbuf + len, buf_len - len,
-		"|--------------------------------------------------------------------------------------|\n");
-	len += scnprintf(stringbuf + len, buf_len - len,
-		"|********Primary Display Path General Information********\n");
-	if (mutex_trylock(&(pgc->lock))) {
-		mutex_unlock(&(pgc->lock));
-		len += scnprintf(stringbuf + len, buf_len - len,
-			"|primary path global mutex is free\n");
-	} else {
-		len += scnprintf(stringbuf + len, buf_len - len,
-			"|primary path global mutex is hold by [%s]\n",
-			pgc->mutex_locker);
-	}
-
-	if (lcm_param && lcm_drv)
-		len += scnprintf(stringbuf + len, buf_len - len,
-			"|LCM Driver=[%s]\tResolution=%dx%d,Interface:%s, LCM Connected:%s\n",
-			lcm_drv->name, lcm_param->width, lcm_param->height,
-			(lcm_param->type == LCM_TYPE_DSI) ? "DSI" : "Other",
-			islcmconnected ? "Y" : "N");
-	len += scnprintf(stringbuf + len, buf_len - len,
-		"|State=%s\tlcm_fps=%d\tmax_layer=%d\tmode:%s\tvsync_drop=%d\n",
-		pgc->state == DISP_ALIVE ? "Alive" : "Sleep", primary_display_get_fps_nolock(),
-		pgc->max_layer, session_mode_spy(pgc->session_mode),
-		pgc->vsync_drop);
-	len += scnprintf(stringbuf + len, buf_len - len,
-		"|cmdq_handle_config=%p\tcmdq_handle_trigger=%p\tdpmgr_handle=%p\tovl2mem_path_handle=%p\n",
-		pgc->cmdq_handle_config, pgc->cmdq_handle_trigger,
-		pgc->dpmgr_handle, pgc->ovl2mem_path_handle);
-	len += scnprintf(stringbuf + len, buf_len - len,
-		"|Current display driver status=%s + %s\n",
-		primary_display_is_video_mode() ? "video mode" : "cmd mode",
-		primary_display_cmdq_enabled() ? "CMDQ On" : "CMDQ Off");
-#ifdef CONFIG_MTK_HIGH_FRAME_RATE
-		/*DynFPS info*/
-		len += scnprintf(stringbuf + len, buf_len - len,
-			"|DynFPS=%d\n", primary_display_is_support_DynFPS());
-#endif
-
-	return len;
-}
 
 enum DISP_MODULE_ENUM _get_dst_module_by_lcm(struct disp_lcm_handle *plcm)
 {
@@ -1279,39 +1042,6 @@ static long get_current_time_us(void)
 
 	do_gettimeofday(&t);
 	return (t.tv_sec & 0xFFF) * 1000000 + t.tv_usec;
-}
-
-static enum hrtimer_restart _DISP_CmdModeTimer_handler(struct hrtimer *timer)
-{
-	DISPMSG("fake timer, wake up\n");
-	dpmgr_signal_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
-#if 0
-	if ((get_current_time_us() - pgc->last_vsync_tick) > 16666) {
-		dpmgr_signal_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
-		pgc->last_vsync_tick = get_current_time_us();
-	}
-#endif
-	hrtimer_forward_now(timer, ns_to_ktime(16666666));
-	return HRTIMER_RESTART;
-}
-
-int _init_vsync_fake_monitor(int fps)
-{
-	if (is_fake_timer_inited)
-		return 0;
-
-	is_fake_timer_inited = 1;
-
-	if (fps == 0)
-		fps = 6000;
-
-	hrtimer_init(&cmd_mode_update_timer, CLOCK_MONOTONIC,
-		HRTIMER_MODE_REL);
-	cmd_mode_update_timer.function = _DISP_CmdModeTimer_handler;
-	hrtimer_start(&cmd_mode_update_timer, ns_to_ktime(16666666),
-		HRTIMER_MODE_REL);
-
-	return 0;
 }
 
 static void change_dsi_vfp(struct cmdqRecStruct *handle, unsigned int fps)
@@ -1702,65 +1432,6 @@ void _cmdq_insert_wait_frame_done_token_mira(void *handle)
 	}
 
 	dprec_event_op(DPREC_EVENT_CMDQ_WAIT_STREAM_EOF);
-}
-
-static void update_frm_seq_info(unsigned int addr, unsigned int addr_offset,
-	unsigned int seq, enum DISP_FRM_SEQ_STATE state)
-{
-	int i = 0;
-
-	if (state == FRM_CONFIG) {
-		frm_update_sequence[frm_update_cnt].state = state;
-		frm_update_sequence[frm_update_cnt].mva = addr;
-		frm_update_sequence[frm_update_cnt].max_offset = addr_offset;
-		if (seq > 0)
-			frm_update_sequence[frm_update_cnt].seq = seq;
-		mmprofile_log_ex(ddp_mmp_get_events()->primary_seq_config,
-			MMPROFILE_FLAG_PULSE, addr, seq);
-	} else if (state == FRM_TRIGGER) {
-		frm_update_sequence[frm_update_cnt].state = FRM_TRIGGER;
-		mmprofile_log_ex(ddp_mmp_get_events()->primary_seq_trigger,
-			MMPROFILE_FLAG_PULSE, frm_update_cnt,
-			frm_update_sequence[frm_update_cnt].seq);
-
-		dprec_logger_frame_seq_begin(pgc->session_id,
-			frm_update_sequence[frm_update_cnt].seq);
-
-		frm_update_cnt++;
-		frm_update_cnt %= FRM_UPDATE_SEQ_CACHE_NUM;
-	} else if (state == FRM_START) {
-		for (i = 0; i < FRM_UPDATE_SEQ_CACHE_NUM; i++) {
-			if ((abs(addr - frm_update_sequence[i].mva) >
-				frm_update_sequence[i].max_offset) ||
-			    (frm_update_sequence[i].state != FRM_TRIGGER))
-				continue;
-
-			mmprofile_log_ex(
-				ddp_mmp_get_events()->primary_seq_rdma_irq,
-				MMPROFILE_FLAG_PULSE,
-				frm_update_sequence[i].mva,
-				frm_update_sequence[i].seq);
-			frm_update_sequence[i].state = FRM_START;
-			dprec_logger_frame_seq_end(pgc->session_id,
-				frm_update_sequence[i].seq);
-			dprec_logger_frame_seq_begin(0,
-				frm_update_sequence[i].seq);
-		}
-	} else if (state == FRM_END) {
-		for (i = 0; i < FRM_UPDATE_SEQ_CACHE_NUM; i++) {
-			if (frm_update_sequence[i].state != FRM_START)
-				continue;
-
-			frm_update_sequence[i].state = FRM_END;
-			dprec_logger_frame_seq_end(0,
-				frm_update_sequence[i].seq);
-			mmprofile_log_ex(
-				ddp_mmp_get_events()->primary_seq_release,
-				MMPROFILE_FLAG_PULSE,
-				frm_update_sequence[i].mva,
-				frm_update_sequence[i].seq);
-		}
-	}
 }
 
 static int _config_wdma_output(struct WDMA_CONFIG_STRUCT *wdma_config,
@@ -3056,7 +2727,6 @@ unsigned int cmdqDdpDumpInfo(uint64_t engineFlag, char *pOutBuf,
 	unsigned int bufSize)
 {
 	DISPERR("cmdq timeout:%llu\n", engineFlag);
-	primary_display_diagnose();
 
 	if (primary_display_is_decouple_mode())
 		ddp_dump_analysis(DISP_MODULE_OVL0);
@@ -3351,13 +3021,6 @@ static int _ovl_fence_release_callback(unsigned long userdata)
 			MMPROFILE_FLAG_PULSE, i, fence_idx - subtractor);
 	}
 
-	if (disp_helper_get_option(DISP_OPT_PERFORMANCE_DEBUG)) {
-		unsigned int addr = 0;
-
-		addr = ddp_ovl_get_cur_addr(!_should_config_ovl_input(), 0);
-		if ((primary_display_is_decouple_mode() == 0))
-			update_frm_seq_info(addr, 0, 2, FRM_START);
-	}
 	hrt_bw_sync_idx(hrt_idx);
 #ifdef MTK_FB_MMDVFS_SUPPORT
 	/* update bandwidth */
@@ -3524,55 +3187,6 @@ static int primary_display_remove_output(void *callback,
 		DISPERR("fail to remove memout out\n");
 	}
 	return ret;
-}
-
-static void primary_display_frame_update_irq_callback(
-	enum DISP_MODULE_ENUM module, unsigned int param)
-{
-	/* if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE) */
-	/*     return; */
-
-	if (module == DISP_MODULE_RDMA0) {
-		if (param & 0x2) { /* rdma0 frame start 0x20 */
-			if (pgc->session_id > 0 &&
-				primary_display_is_decouple_mode())
-				update_frm_seq_info(ddp_ovl_get_cur_addr(1, 0),
-					0, 1, FRM_START);
-		}
-
-		if (param & 0x4) { /* rdma0 frame done */
-			atomic_set(&primary_display_frame_update_event, 1);
-			wake_up_interruptible(&primary_display_frame_update_wq);
-		}
-	}
-
-	if ((module == DISP_MODULE_OVL0) &&
-		(primary_display_is_decouple_mode() == 0)) {
-		if (param & 0x2) { /* ovl0 frame done */
-			atomic_set(&primary_display_frame_update_event, 1);
-			wake_up_interruptible(&primary_display_frame_update_wq);
-		}
-	}
-}
-
-static int primary_display_frame_update_kthread(void *data)
-{
-	struct sched_param param = {.sched_priority = 94 };
-
-	sched_setscheduler(current, SCHED_RR, &param);
-	for (;;) {
-		wait_event_interruptible(primary_display_frame_update_wq,
-			atomic_read(&primary_display_frame_update_event));
-		atomic_set(&primary_display_frame_update_event, 0);
-
-		if (pgc->session_id > 0)
-			update_frm_seq_info(0, 0, 0, FRM_END);
-
-		if (kthread_should_stop())
-			break;
-	}
-
-	return 0;
 }
 
 #ifdef MTK_FB_ION_SUPPORT /* FIXME: remove when ION ready */
@@ -3743,9 +3357,6 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 
 	fps_ctx_init(&primary_fps_ctx,
 		disp_helper_get_option(DISP_OPT_FPS_CALC_WND));
-	if (disp_helper_get_option(DISP_OPT_FPS_EXT))
-		fps_ext_ctx_init(&primary_fps_ext_ctx,
-			disp_helper_get_option(DISP_OPT_FPS_EXT_INTERVAL));
 
 #ifdef MTK_FB_MMDVFS_SUPPORT
 	mtk_pm_qos_add_request(&primary_display_qos_request,
@@ -3872,10 +3483,7 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 		DISPWARN("WARNING!!!!!! FORCE NO LCM MODE!!!\n");
 		islcmconnected = 0;
 
-		/* no need to change video mode vsync behavior */
 		if (!primary_display_is_video_mode()) {
-			_init_vsync_fake_monitor(lcm_fps);
-
 			dpmgr_map_event_to_irq(pgc->dpmgr_handle,
 				DISP_PATH_EVENT_IF_VSYNC, DDP_IRQ_UNKNOWN);
 		}
@@ -4029,21 +3637,6 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 		pf_thread_init = true;
 	}
 #endif
-
-	if (disp_helper_get_option(DISP_OPT_PERFORMANCE_DEBUG)) {
-		if (primary_display_frame_update_task == NULL) {
-			init_waitqueue_head(&primary_display_frame_update_wq);
-			disp_register_module_irq_callback(DISP_MODULE_RDMA0,
-				primary_display_frame_update_irq_callback);
-			disp_register_module_irq_callback(DISP_MODULE_OVL0,
-				primary_display_frame_update_irq_callback);
-			primary_display_frame_update_task =
-				kthread_create(
-					primary_display_frame_update_kthread,
-					NULL, "frame_update_worker");
-			wake_up_process(primary_display_frame_update_task);
-		}
-	}
 
 	if (primary_display_is_video_mode()) {
 		if (disp_helper_get_option(DISP_OPT_SWITCH_DST_MODE)) {
@@ -4296,34 +3889,6 @@ int primary_display_wait_for_vsync(void *config)
 			  islcmconnected, has_vsync);
 		msleep(20);
 		return 0;
-	}
-
-	if (pgc->force_fps_keep_count && pgc->force_fps_skip_count) {
-		g_keep++;
-		DISPMSG("vsync|keep %d\n", g_keep);
-		if (g_keep == pgc->force_fps_keep_count) {
-			g_keep = 0;
-
-			while (g_skip != pgc->force_fps_skip_count) {
-				g_skip++;
-				DISPMSG("vsync|skip %d\n", g_skip);
-				ret = dpmgr_wait_event_timeout(
-						pgc->dpmgr_handle,
-						DISP_PATH_EVENT_IF_VSYNC,
-						HZ / 10);
-				if (ret == -2) {
-					DISPWARN(
-						"vsync for primary display path not enabled yet\n");
-					return -1;
-				} else if (ret == 0) {
-					primary_display_release_fence_fake();
-				}
-			}
-			g_skip = 0;
-		}
-	} else {
-		g_keep = 0;
-		g_skip = 0;
 	}
 
 	ret = dpmgr_wait_event_ts(pgc->dpmgr_handle,
@@ -5006,10 +4571,7 @@ int primary_display_resume(void)
 		DISPWARN("WARNING!!!!!! FORCE NO LCM MODE!!!\n");
 		islcmconnected = 0;
 
-		/* no need to change video mode vsync behavior */
 		if (!primary_display_is_video_mode()) {
-			_init_vsync_fake_monitor(pgc->lcm_fps);
-
 			dpmgr_map_event_to_irq(pgc->dpmgr_handle,
 				DISP_PATH_EVENT_IF_VSYNC, DDP_IRQ_UNKNOWN);
 		}
@@ -5174,11 +4736,6 @@ static int primary_display_trigger_nolock(int blocking, void *callback,
 		is_switched_dst_mode = false;
 	}
 
-	if (gTriggerDispMode > 0) {
-		primary_display_release_fence_fake();
-		return ret;
-	}
-
 	primary_trigger_cnt++;
 
 	if (pgc->state == DISP_SLEPT) {
@@ -5187,10 +4744,6 @@ static int primary_display_trigger_nolock(int blocking, void *callback,
 		goto done;
 	}
 
-	if (g_idle_skip_trigger == 0){
-		g_idle_skip++;
-		g_idle_skip_trigger++;
-	}
 	primary_display_idlemgr_kick(__func__, 0);
 
 	dprec_logger_start(DPREC_LOGGER_PRIMARY_TRIGGER, 0, 0);
@@ -5239,9 +4792,6 @@ static int primary_display_trigger_nolock(int blocking, void *callback,
 	atomic_set(&delayed_trigger_kick, 1);
 
 done:
-	if (pgc->session_id > 0)
-		update_frm_seq_info(0, 0, 0, FRM_TRIGGER);
-
 	return ret;
 }
 
@@ -5374,11 +4924,6 @@ static int primary_frame_cfg_output(struct disp_frame_cfg_t *cfg)
 	}
 
 	ret = config_wdma_output(disp_handle, cmdq_handle, &cfg->output_cfg);
-
-	if ((pgc->session_id > 0) && primary_display_is_decouple_mode())
-		update_frm_seq_info((unsigned long)(cfg->output_cfg.pa), 0,
-			mtkfb_query_frm_seq_by_addr(pgc->session_id, 0, 0),
-			FRM_CONFIG);
 
 	_convert_disp_output_to_memout(&cfg->output_cfg, &mem_config);
 
@@ -6135,14 +5680,6 @@ static int _config_ovl_input(struct disp_frame_cfg_t *cfg,
 
 		dprec_mmp_dump_ovl_layer(ovl_cfg, layer, 1);
 
-		if ((ovl_cfg->layer == 0) &&
-			(!primary_display_is_decouple_mode()))
-			update_frm_seq_info(ovl_cfg->addr,
-			    ovl_cfg->src_x * 4 +
-			    ovl_cfg->src_y * ovl_cfg->src_pitch,
-			    mtkfb_query_frm_seq_by_addr(pgc->session_id, 0, 0),
-			    FRM_CONFIG);
-
 		if (max_layer_id_configed < layer)
 			max_layer_id_configed = layer;
 
@@ -6566,9 +6103,6 @@ static int primary_frame_cfg_input(struct disp_frame_cfg_t *cfg)
 	struct cmdqRecStruct *cmdq_handle;
 	struct disp_ccorr_config m_ccorr_config = cfg->ccorr_config;
 
-	if (gTriggerDispMode > 0)
-		return 0;
-
 	if (disp_helper_get_option(DISP_OPT_IDLE_MGR))
 		primary_display_idlemgr_kick(__func__, 0);
 
@@ -6602,9 +6136,6 @@ static int primary_frame_cfg_input(struct disp_frame_cfg_t *cfg)
 
 	if (disp_helper_get_stage() == DISP_HELPER_STAGE_NORMAL)
 		fps_ctx_update(&primary_fps_ctx);
-
-	if (disp_helper_get_option(DISP_OPT_FPS_EXT))
-		fps_ext_ctx_update(&primary_fps_ext_ctx);
 
 	if (disp_helper_get_option(DISP_OPT_SHOW_VISUAL_DEBUG_INFO))
 		primary_show_basic_debug_info(cfg);
@@ -7431,12 +6962,7 @@ int primary_display_get_info(struct disp_session_info *info)
 
 	dispif_info->isConnected = 1;
 
-	if (disp_helper_get_option(DISP_OPT_FPS_EXT))
-		fps_ext_ctx_get_fps(&primary_fps_ext_ctx,
-			&dispif_info->updateFPS,
-			&dispif_info->is_updateFPS_stable);
-	else
-		fps_ctx_get_fps(&primary_fps_ctx, &dispif_info->updateFPS,
+	fps_ctx_get_fps(&primary_fps_ctx, &dispif_info->updateFPS,
 			&dispif_info->is_updateFPS_stable);
 
 	dispif_info->updateFPS *= 100;
@@ -7456,23 +6982,6 @@ int primary_display_is_video_mode(void)
 	 * will support cmd/vdo dynamic switch
 	 */
 	return disp_lcm_is_video_mode(pgc->plcm);
-}
-
-int primary_display_diagnose(void)
-{
-	int ret = 0;
-
-	DISPMSG("==== %s ===>\n", __func__);
-	/* confirm mm clk*/
-	/* check_mm0_clk_sts(); */
-	dpmgr_check_status(pgc->dpmgr_handle);
-
-	if (primary_display_is_decouple_mode()) {
-		/* to prevent race condition with DC->DL switch */
-		dpmgr_check_status_by_scenario(DDP_SCENARIO_PRIMARY_OVL_MEMOUT);
-	}
-	DISPMSG("==== %s ===<\n", __func__);
-	return ret;
 }
 
 enum CMDQ_SWITCH primary_display_cmdq_enabled(void)
@@ -7525,8 +7034,6 @@ int primary_display_force_set_fps(unsigned int keep, unsigned int skip)
 	pgc->force_fps_keep_count = keep;
 	pgc->force_fps_skip_count = skip;
 
-	g_keep = 0;
-	g_skip = 0;
 	_primary_path_unlock(__func__);
 
 	return ret;
@@ -8228,49 +7735,6 @@ static int _screen_cap_by_cpu(unsigned int mva, enum UNIFIED_COLOR_FMT ufmt,
 	return 0;
 }
 
-int primary_display_capture_framebuffer(unsigned long pbuf)
-{
-	unsigned int fb_layer_id = primary_display_get_option("FB_LAYER");
-	unsigned int w_xres = primary_display_get_width();
-	unsigned int h_yres = primary_display_get_height();
-	/* bpp is either 32 or 16, can not be other value */
-	unsigned int pixel_bpp = primary_display_get_bpp() / 8;
-	unsigned int w_fb = ALIGN_TO(w_xres, MTK_FB_ALIGNMENT);
-	/* frame buffer size */
-	unsigned int fbsize = w_fb * h_yres * pixel_bpp;
-	struct disp_ddp_path_config *path_config =
-		dpmgr_path_get_last_config(pgc->dpmgr_handle);
-	unsigned long fbaddress = path_config->ovl_config[fb_layer_id].addr;
-	void *fbv = 0;
-	unsigned int i;
-	unsigned long ttt;
-
-	DISPMSG(
-		"w_res=%d, h_yres=%d, pixel_bpp=%d, w_fb=%d, fbsize=%d, fbaddress=0x%lx\n",
-		w_xres, h_yres, pixel_bpp, w_fb, fbsize, fbaddress);
-	fbv = ioremap(fbaddress, fbsize);
-	DISPMSG(
-		"w_xres = %d, h_yres = %d, w_fb = %d, pixel_bpp = %d, fbsize = %d, fbaddress = 0x%08lx\n",
-		w_xres, h_yres, w_fb, pixel_bpp, fbsize, fbaddress);
-	if (!fbv) {
-		DISPMSG(
-			"[FB Driver], Unable to allocate memory for frame buffer: address=0x%lx, size=0x%08x\n",
-			fbaddress, fbsize);
-		return -1;
-	}
-
-	ttt = get_current_time_us();
-	for (i = 0; i < h_yres; i++) {
-		memcpy((void *)(pbuf + i * w_xres * pixel_bpp),
-		       (void *)(fbv + i * w_fb * pixel_bpp),
-		       w_xres * pixel_bpp);
-	}
-	DISPMSG("capture framebuffer cost %ld us\n",
-		get_current_time_us() - ttt);
-	iounmap((void *)fbv);
-	return -1;
-}
-
 static UINT32 disp_fb_bpp = 32;
 static UINT32 disp_fb_pages = 3;
 
@@ -8289,49 +7753,6 @@ UINT32 DISP_GetFBRamSize(void)
 	return ALIGN_TO(DISP_GetScreenWidth(), MTK_FB_ALIGNMENT) *
 		ALIGN_TO(DISP_GetScreenHeight(), MTK_FB_ALIGNMENT) *
 		((DISP_GetScreenBpp() + 7) >> 3) * DISP_GetPages();
-}
-
-UINT32 DISP_GetVRamSize(void)
-{
-#if 0
-	/* Use a local static variable to cache the calculated vram size */
-	static UINT32 vramSize;
-
-	if (vramSize == 0) {
-		disp_drv_init_context();
-
-		/* get framebuffer size */
-		vramSize = DISP_GetFBRamSize();
-
-		/* get DXI working buffer size */
-		vramSize += disp_if_drv->get_working_buffer_size();
-
-		/* get assertion layer buffer size */
-		vramSize += DAL_GetLayerSize();
-
-		/* Align vramSize to 1MB */
-		vramSize = ALIGN_TO_POW_OF_2(vramSize, 0x100000);
-
-		DISP_LOG("DISP_GetVRamSize: %u bytes\n", vramSize);
-	}
-
-	return vramSize;
-#endif
-
-	return 0;
-}
-
-UINT32 DISP_GetVRamSizeBoot(char *cmdline)
-{
-	unsigned int vramsize;
-
-	vramsize = mtkfb_get_fb_size();
-	if (!vramsize)
-		pr_info("get fb size fail, size=0x%08x|%d\n",
-			vramsize, vramsize);
-	DISPCHECK("[DT]display vram size = 0x%08x|%d\n",
-		vramsize, vramsize);
-	return vramsize;
 }
 
 unsigned int primary_display_get_option(const char *option)
@@ -8724,278 +8145,6 @@ done:
 	_primary_path_unlock(__func__);
 	disp_sw_mutex_unlock(&(pgc->capture_lock));
 	_primary_path_switch_dst_unlock();
-	return ret;
-}
-
-/*****************************************************************************
- * Below code is for Efuse test in Android Load.
- * include TE, ROI and Resolution.
- *****************************************************************************/
-/* extern void DSI_ForceConfig(int forceconfig);	*/
-/* extern int DSI_set_roi(int x,int y);			*/
-/* extern int DSI_check_roi(void);			*/
-
-static int width_array[] = {2560, 1440, 1920, 1280, 1200, 800, 960, 640};
-static int heigh_array[] = {1440, 2560, 1200, 800, 1920, 1280, 640, 960};
-static int array_id[] = {6,   2,   7,   4,   3,    0,   5,   1};
-struct LCM_PARAMS *lcm_param2;
-struct disp_ddp_path_config data_config2;
-
-int primary_display_te_test(void)
-{
-	int ret = 0;
-	int try_cnt = 3;
-	int time_interval = 0;
-	int time_interval_max = 0;
-	long long time_te = 0;
-	long long time_framedone = 0;
-
-	DISPMSG("display_test te begin\n");
-	if (primary_display_is_video_mode()) {
-		DISPMSG("Video Mode No TE\n");
-		return ret;
-	}
-
-	while (try_cnt >= 0) {
-		try_cnt--;
-		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
-			DISP_PATH_EVENT_IF_VSYNC, HZ*1);
-		time_te = sched_clock();
-
-		dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
-		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
-			DISP_PATH_EVENT_FRAME_DONE, HZ*1);
-		time_framedone = sched_clock();
-		time_interval = (int) (time_framedone - time_te);
-		time_interval = time_interval / 1000;
-		if (time_interval > time_interval_max)
-			time_interval_max = time_interval;
-	}
-
-	if (time_interval_max > 20000)
-		ret = 0;
-	else
-		ret = -1;
-
-	if (ret >= 0)
-		DISPMSG("[display_test_result]==>Force On TE Open!(%d)\n",
-			time_interval_max);
-	else
-		DISPMSG("[display_test_result]==>Force On TE Closed!(%d)\n",
-			time_interval_max);
-
-	DISPMSG("display_test te end\n");
-	return ret;
-}
-
-int primary_display_roi_test(int x, int y)
-{
-	int ret = 0;
-
-	DISPMSG("display_test roi begin\n");
-	DISPMSG("display_test roi set roi %d, %d\n", x, y);
-	DSI_set_roi(x, y);
-	msleep(50);
-
-	dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
-	msleep(50);
-
-	DISPMSG("display_test DSI_check_roi\n");
-	ret = DSI_check_roi();
-	msleep(20);
-	if (ret == 0)
-		DISPMSG("[display_test_result]==>DSI_ROI limit!\n");
-	else
-		DISPMSG("[display_test_result]==>DSI_ROI Normal!\n");
-
-	DISPMSG("display_test set roi %d, %d\n", 0, 0);
-
-	DSI_set_roi(0, 0);
-
-	msleep(20);
-	DISPCHECK("display_test end\n");
-	return ret;
-}
-
-int primary_display_resolution_test(void)
-{
-	int ret = 0;
-	int i = 0;
-	unsigned int w_backup = 0;
-	unsigned int h_backup = 0;
-	int dst_width = 0;
-	int dst_heigh = 0;
-	enum LCM_DSI_MODE_CON dsi_mode_backup =
-		primary_display_is_video_mode();
-
-	memset((void *)&data_config2, 0, sizeof(data_config2));
-	lcm_param2 = NULL;
-	memcpy((void *)&data_config2,
-		(void *)dpmgr_path_get_last_config(pgc->dpmgr_handle),
-		sizeof(struct disp_ddp_path_config));
-	w_backup = data_config2.dst_w;
-	h_backup = data_config2.dst_h;
-	DISPCHECK(
-		"[display_test resolution]w_backup %d h_backup %d dsi_mode_backup %d\n",
-		  w_backup, h_backup, dsi_mode_backup);
-	/* for dsi config */
-	DSI_ForceConfig(1);
-	for (i = 0; i < sizeof(width_array)/sizeof(int); i++) {
-		dst_width = width_array[i];
-		dst_heigh = heigh_array[i];
-		DISPCHECK("[display_test resolution] width %d, heigh %d\n",
-			dst_width, dst_heigh);
-		lcm_param2 = disp_lcm_get_params(pgc->plcm);
-		lcm_param2->dsi.mode = CMD_MODE;
-		lcm_param2->dsi.horizontal_active_pixel = dst_width;
-		lcm_param2->dsi.vertical_active_line = dst_heigh;
-
-		data_config2.dispif_config.dsi.mode = CMD_MODE;
-		data_config2.dispif_config.dsi.horizontal_active_pixel =
-			dst_width;
-		data_config2.dispif_config.dsi.vertical_active_line =
-			dst_heigh;
-
-		data_config2.dst_w = dst_width;
-		data_config2.dst_h = dst_heigh;
-
-		data_config2.ovl_config[0].layer    = 0;
-		data_config2.ovl_config[0].layer_en = 0;
-		data_config2.ovl_config[1].layer    = 1;
-		data_config2.ovl_config[1].layer_en = 0;
-		data_config2.ovl_config[2].layer    = 2;
-		data_config2.ovl_config[2].layer_en = 0;
-		data_config2.ovl_config[3].layer    = 3;
-		data_config2.ovl_config[3].layer_en = 0;
-
-		data_config2.dst_dirty = 1;
-		data_config2.ovl_dirty = 1;
-
-		dpmgr_path_set_video_mode(pgc->dpmgr_handle,
-			primary_display_is_video_mode());
-
-		dpmgr_path_config(pgc->dpmgr_handle, &data_config2,
-			NULL);
-		data_config2.dst_dirty = 0;
-		data_config2.ovl_dirty = 0;
-
-		dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
-
-		if (dpmgr_path_is_busy(pgc->dpmgr_handle))
-			DISPERR(
-				"[display_test]==>Fatal error, we didn't trigger display path but it's already busy\n");
-
-		dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
-
-		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
-			DISP_PATH_EVENT_FRAME_DONE, HZ*1);
-		if (ret > 0 && !dpmgr_path_is_busy(pgc->dpmgr_handle)) {
-			if (i == 0)
-				DISPCHECK(
-					"[display_test resolution] display_result 0x%x unlimited!\n",
-					array_id[i]);
-			else if (i == 1)
-				DISPCHECK(
-					"[display_test resolution] display_result 0x%x unlimited (W<H)\n",
-					array_id[i]);
-			else
-				DISPCHECK(
-					"[display_test resolution] display_result 0x%x(%d x %d)\n",
-					array_id[i], dst_width, dst_heigh);
-			break;
-		}
-		dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
-	}
-	dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
-	lcm_param2 = disp_lcm_get_params(pgc->plcm);
-	lcm_param2->dsi.mode = dsi_mode_backup;
-	lcm_param2->dsi.vertical_active_line = h_backup;
-	lcm_param2->dsi.horizontal_active_pixel = w_backup;
-	data_config2.dispif_config.dsi.vertical_active_line = h_backup;
-	data_config2.dispif_config.dsi.horizontal_active_pixel = w_backup;
-	data_config2.dispif_config.dsi.mode = dsi_mode_backup;
-	data_config2.dst_w = w_backup;
-	data_config2.dst_h = h_backup;
-	data_config2.dst_dirty = 1;
-	dpmgr_path_set_video_mode(pgc->dpmgr_handle,
-		primary_display_is_video_mode());
-	dpmgr_path_connect(pgc->dpmgr_handle, CMDQ_DISABLE);
-	dpmgr_path_config(pgc->dpmgr_handle, &data_config2, NULL);
-	data_config2.dst_dirty = 0;
-	DSI_ForceConfig(0);
-	return ret;
-}
-
-int primary_display_check_test(void)
-{
-	int ret = 0;
-	int esd_backup = 0;
-
-	DISPCHECK("[display_test]Display test[Start]\n");
-	_primary_path_lock(__func__);
-	/* disable esd check */
-	if (1) {
-		esd_backup = 1;
-		primary_display_esd_check_enable(0);
-		msleep(2000);
-		DISPCHECK("[display_test]Disable esd check end\n");
-	}
-
-	/* if suspend => return */
-	if (pgc->state == DISP_SLEPT) {
-		DISPCHECK(
-			"[display_test_result]======================================\n");
-		DISPCHECK(
-			"[display_test_result]==>Test Fail : primary display path is slept\n");
-		DISPCHECK(
-			"[display_test_result]======================================\n");
-		goto done;
-	}
-
-	/* stop trigger loop */
-	DISPCHECK("[display_test]Stop trigger loop[begin]\n");
-	_cmdq_stop_trigger_loop();
-	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
-		DISPCHECK("[display_test]==>primary display path is busy\n");
-		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
-			DISP_PATH_EVENT_FRAME_DONE, HZ*1);
-		if (ret <= 0)
-			dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
-
-		DISPCHECK("[display_test]==>wait frame done ret:%d\n", ret);
-	}
-	DISPCHECK("[display_test]Stop trigger loop[end]\n");
-
-	/* test force te */
-	/* primary_display_te_test(); */
-
-	/* test roi */
-	/* primary_display_roi_test(30, 30); */
-
-	/* test resolution test */
-	primary_display_resolution_test();
-
-	DISPCHECK("[display_test]start dpmgr path[begin]\n");
-	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
-	if (dpmgr_path_is_busy(pgc->dpmgr_handle))
-		DISPERR(
-			"[display_test]==>Fatal error, we didn't trigger display path but it's already busy\n");
-
-	DISPCHECK("[display_test]start dpmgr path[end]\n");
-
-	DISPCHECK("[display_test]Start trigger loop[begin]\n");
-	_cmdq_start_trigger_loop();
-	DISPCHECK("[display_test]Start trigger loop[end]\n");
-
-done:
-	/* restore esd */
-	if (esd_backup == 1) {
-		primary_display_esd_check_enable(1);
-		DISPCHECK("[display_test]Restore esd check\n");
-	}
-	/* unlock path */
-	_primary_path_unlock(__func__);
-	DISPCHECK("[display_test]Display test[End]\n");
 	return ret;
 }
 
@@ -9683,5 +8832,3 @@ void primary_display_dynfps_get_vfp_info(
 }
 /*-----------------DynFPS end-------------------------------*/
 #endif
-
-
