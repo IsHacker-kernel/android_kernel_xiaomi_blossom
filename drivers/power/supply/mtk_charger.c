@@ -467,26 +467,7 @@ static void mtk_charger_parse_dt(struct mtk_charger *info,
 
 static void mtk_charger_start_timer(struct mtk_charger *info)
 {
-	struct timespec time, time_now;
-	ktime_t ktime;
-	int ret = 0;
-
-	/* If the timer was already set, cancel it */
-	ret = alarm_try_to_cancel(&info->charger_timer);
-	if (ret < 0) {
-		chr_err("%s: callback was running, skip timer\n", __func__);
-		return;
-	}
-
-	get_monotonic_boottime(&time_now);
-	time.tv_sec = info->polling_interval;
-	time.tv_nsec = 0;
-	info->endtime = timespec_add(time_now, time);
-	ktime = ktime_set(info->endtime.tv_sec, info->endtime.tv_nsec);
-
-	chr_err("%s: alarm timer start:%d, %ld %ld\n", __func__, ret,
-		info->endtime.tv_sec, info->endtime.tv_nsec);
-	alarm_start(&info->charger_timer, ktime);
+	printk("Bypass charger alarm timer");
 }
 
 static void check_battery_exist(struct mtk_charger *info)
@@ -1650,17 +1631,6 @@ static int charger_pm_event(struct notifier_block *notifier,
 		info->is_suspend = false;
 		chr_debug("%s: enter PM_POST_SUSPEND\n", __func__);
 		get_monotonic_boottime(&now);
-
-		if (timespec_compare(&now, &info->endtime) >= 0 &&
-			info->endtime.tv_sec != 0 &&
-			info->endtime.tv_nsec != 0) {
-			chr_err("%s: alarm timeout, wake up charger\n",
-				__func__);
-			__pm_relax(info->charger_wakelock);
-			info->endtime.tv_sec = 0;
-			info->endtime.tv_nsec = 0;
-			_wake_up_charger(info);
-		}
 		break;
 	default:
 		break;
@@ -1672,30 +1642,14 @@ static int charger_pm_event(struct notifier_block *notifier,
 static enum alarmtimer_restart
 	mtk_charger_alarm_timer_func(struct alarm *alarm, ktime_t now)
 {
-	struct mtk_charger *info =
-	container_of(alarm, struct mtk_charger, charger_timer);
-
-	if (info->is_suspend == false) {
-		chr_err("%s: not suspend, wake up charger\n", __func__);
-		_wake_up_charger(info);
-	} else {
-		chr_err("%s: alarm timer timeout\n", __func__);
-		__pm_stay_awake(info->charger_wakelock);
-	}
+	printk("Bypass charger alarm timer");
 
 	return ALARMTIMER_NORESTART;
 }
 
 static void mtk_charger_init_timer(struct mtk_charger *info)
 {
-	alarm_init(&info->charger_timer, ALARM_BOOTTIME,
-			mtk_charger_alarm_timer_func);
-	mtk_charger_start_timer(info);
-
-#ifdef CONFIG_PM
-	if (register_pm_notifier(&info->pm_notifier))
-		chr_err("%s: register pm failed\n", __func__);
-#endif /* CONFIG_PM */
+	printk("Bypass charger alarm timer");
 }
 
 static int mtk_charger_setup_files(struct platform_device *pdev)
