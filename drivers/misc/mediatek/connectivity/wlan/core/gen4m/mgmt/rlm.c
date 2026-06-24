@@ -6471,27 +6471,7 @@ void rlmSetMaxTxPwrLimit(IN struct ADAPTER *prAdapter, int8_t cLimit,
 	kalMemZero(&rTxPwrLimit, sizeof(rTxPwrLimit));
 	rTxPwrLimit.ucCmdVer =  0x1;
 	rTxPwrLimit.ucPwrSetEnable =  ucEnable;
-	if (ucEnable) {
-		if (cLimit > RLM_MAX_TX_PWR) {
-			DBGLOG(RLM, INFO,
-			       "LM: Target MaxPwr %d Higher than Capability, reset to capability\n",
-			       cLimit);
-			cLimit = RLM_MAX_TX_PWR;
-		}
-		if (cLimit < RLM_MIN_TX_PWR) {
-			DBGLOG(RLM, INFO,
-			       "LM: Target MinPwr %d Lower than Capability, reset to capability\n",
-			       cLimit);
-			cLimit = RLM_MIN_TX_PWR;
-		}
-		DBGLOG(RLM, INFO,
-		       "LM: Set Max Tx Power Limit %d, Min Limit %d\n", cLimit,
-		       RLM_MIN_TX_PWR);
-		rTxPwrLimit.cMaxTxPwr =
-			cLimit * 2; /* unit of cMaxTxPwr is 0.5 dBm */
-		rTxPwrLimit.cMinTxPwr = RLM_MIN_TX_PWR * 2;
-	} else
-		DBGLOG(RLM, TRACE, "LM: Disable Tx Power Limit\n");
+	DBGLOG(RLM, TRACE, "LM: Disable Tx Power Limit\n");
 	wlanSendSetQueryCmd(prAdapter, CMD_ID_SET_AP_CONSTRAINT_PWR_LIMIT, TRUE,
 			    FALSE, FALSE, nicCmdEventSetCommon,
 			    nicOidCmdTimeoutCommon,
