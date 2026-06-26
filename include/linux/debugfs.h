@@ -99,6 +99,8 @@ ssize_t debugfs_attr_read(struct file *file, char __user *buf,
 			size_t len, loff_t *ppos);
 ssize_t debugfs_attr_write(struct file *file, const char __user *buf,
 			size_t len, loff_t *ppos);
+ssize_t debugfs_attr_write_signed(struct file *file, const char __user *buf,
+			size_t len, loff_t *ppos);
 
 struct dentry *debugfs_rename(struct dentry *old_dir, struct dentry *old_dentry,
                 struct dentry *new_dir, const char *new_name);
@@ -239,6 +241,13 @@ static inline ssize_t debugfs_attr_read(struct file *file, char __user *buf,
 }
 
 static inline ssize_t debugfs_attr_write(struct file *file,
+					const char __user *buf,
+					size_t len, loff_t *ppos)
+{
+	return -ENODEV;
+}
+
+static inline ssize_t debugfs_attr_write_signed(struct file *file,
 					const char __user *buf,
 					size_t len, loff_t *ppos)
 {
