@@ -78,6 +78,7 @@ struct mtk_wdt_dev {
 	void __iomem *wdt_base;
 	spinlock_t lock; /* protects WDT_SWSYSRST reg */
 	struct reset_controller_dev rcdev;
+	bool restart_timeout_reset;
 };
 
 struct mtk_wdt_data {
@@ -251,6 +252,7 @@ static int mtk_wdt_reboot_notify(struct notifier_block *nb,
 	if (action != SYS_RESTART || !mtk_wdt_needs_restart_fallback(cmd))
 		return NOTIFY_DONE;
 
+	mtk_wdt->restart_timeout_reset = true;
 	mtk_wdt_set_restart_mode(mtk_wdt, cmd);
 	mtk_wdt_arm_restart_timeout(mtk_wdt, WDT_RESTART_FALLBACK_TIMEOUT);
 
@@ -322,10 +324,12 @@ static int mtk_wdt_restart(struct watchdog_device *wdt_dev,
 {
 	struct mtk_wdt_dev *mtk_wdt = watchdog_get_drvdata(wdt_dev);
 	void __iomem *wdt_base = mtk_wdt->wdt_base;
+	bool timeout_reset = mtk_wdt->restart_timeout_reset ||
+			     mtk_wdt_needs_restart_fallback(data);
 
 	mtk_wdt_set_restart_mode(mtk_wdt, data);
 
-	if (mtk_wdt_needs_restart_fallback(data)) {
+	if (timeout_reset) {
 		/*
 		 * On this platform a direct WDT_SWRST can store the boot mode
 		 * and then leave the AP at a black screen. Let TOPRGU expire
