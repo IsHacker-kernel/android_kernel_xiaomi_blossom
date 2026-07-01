@@ -341,7 +341,7 @@ static void cmdq_task_reset_thread(struct cmdqRecStruct *handle)
 	 * for dynamic dispatch scenario (MDP) no need acquire at create
 	 * static dispath in secure path
 	 */
-	if (cmdq_get_func()->isDynamic(handle->scenario) &&
+	if (cmdq_virtual_is_dynamic_scenario(handle->scenario) &&
 		!handle->secData.is_secure) {
 		/* mark as client dispatch */
 		handle->thd_dispatch = CMDQ_THREAD_DYNAMIC;
@@ -404,7 +404,7 @@ s32 cmdq_task_create(enum CMDQ_SCENARIO_ENUM scenario,
 	}
 
 	INIT_LIST_HEAD(&handle->list_entry);
-	handle->engineFlag = cmdq_get_func()->flagFromScenario(scenario);
+	handle->engineFlag = cmdq_virtual_flag_from_scenario(scenario);
 	handle->scenario = scenario;
 	handle->ctrl = cmdq_core_get_controller();
 
@@ -421,7 +421,7 @@ s32 cmdq_task_create(enum CMDQ_SCENARIO_ENUM scenario,
 	}
 
 	if (unlikely(handle->thread == CMDQ_INVALID_THREAD) &&
-		cmdq_get_func()->isDispScenario(scenario)) {
+		cmdq_virtual_is_disp_scenario(scenario)) {
 		CMDQ_ERR("cannot dispatch thread for disp scenario:%d\n",
 			scenario);
 		cmdq_task_destroy(handle);
@@ -737,7 +737,7 @@ static s32 cmdq_append_wpr_command(
 	/* be careful that subsys encoding position
 	 * is different among platforms
 	 */
-	const u32 subsys_bit = cmdq_get_func()->getSubsysLSBArgA();
+	const u32 subsys_bit = cmdq_virtual_get_subsys_LSB_in_arg_a();
 
 	if (!handle)
 		return -EFAULT;
@@ -849,7 +849,7 @@ static s32 cmdq_append_rw_s_command(struct cmdqRecStruct *handle,
 	/* be careful that subsys encoding position is different
 	 * among platforms
 	 */
-	const u32 subsys_bit = cmdq_get_func()->getSubsysLSBArgA();
+	const u32 subsys_bit = cmdq_virtual_get_subsys_LSB_in_arg_a();
 
 	if (!handle)
 		return -EFAULT;
@@ -976,9 +976,9 @@ s32 cmdq_append_command(struct cmdqRecStruct *handle,
 	 * GCE deadlocks if we don't do so
 	 */
 	if (code != CMDQ_CODE_EOC &&
-		cmdq_get_func()->shouldEnablePrefetch(handle->scenario)) {
+		cmdq_virtual_should_enable_prefetch(handle->scenario)) {
 		u32 prefetchSize = 0;
-		s32 threadNo = cmdq_get_func()->getThreadID(handle->scenario,
+		s32 threadNo = cmdq_virtual_get_thread_index(handle->scenario,
 			handle->secData.is_secure);
 
 		prefetchSize = cmdq_core_get_thread_prefetch_size(threadNo);
@@ -2163,7 +2163,7 @@ s32 cmdq_op_finalize_command(struct cmdqRecStruct *handle, bool loop)
 
 	if (!handle->finalized) {
 		if ((handle->prefetchCount > 0) &&
-			cmdq_get_func()->shouldEnablePrefetch(
+			cmdq_virtual_should_enable_prefetch(
 			handle->scenario)) {
 			CMDQ_ERR(
 				"not insert prefetch disable marker when prefetch enabled, prefetchCount:%d\n",
@@ -2184,7 +2184,7 @@ s32 cmdq_op_finalize_command(struct cmdqRecStruct *handle, bool loop)
 		arg_b = 0x1;	/* generate IRQ for each command iteration */
 #ifndef CMDQ_DEBUG_LOOP_IRQ
 		/* no generate IRQ for loop thread to save power */
-		if (loop && !cmdq_get_func()->force_loop_irq(handle->scenario))
+		if (loop && !cmdq_virtual_force_loop_irq(handle->scenario))
 			arg_b = 0x0;
 #endif
 		/* no generate IRQ for delay loop thread */
@@ -3969,7 +3969,7 @@ s32 cmdqRecEnablePrefetch(struct cmdqRecStruct *handle)
 	if (!handle)
 		return -EFAULT;
 
-	if (cmdq_get_func()->shouldEnablePrefetch(handle->scenario)) {
+	if (cmdq_virtual_should_enable_prefetch(handle->scenario)) {
 		/* enable prefetch */
 		CMDQ_VERBOSE("REC: enable prefetch\n");
 		cmdqRecMark(handle);
