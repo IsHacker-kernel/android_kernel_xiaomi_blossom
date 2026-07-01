@@ -126,7 +126,7 @@ static struct ion_buffer *ion_buffer_create(struct ion_heap *heap,
 	buffer->heap = heap;
 	buffer->flags = flags;
 
-	/* log task pid for debug +by k.zhang */
+#if IS_ENABLED(CONFIG_MTK_ION_DEBUG)
 	{
 		struct task_struct *task;
 
@@ -134,6 +134,7 @@ static struct ion_buffer *ion_buffer_create(struct ion_heap *heap,
 		get_task_comm(buffer->task_comm, task);
 		buffer->pid = task_pid_nr(task);
 	}
+#endif
 
 	kref_init(&buffer->ref);
 
@@ -492,7 +493,9 @@ struct ion_handle *__ion_alloc(struct ion_client *client, size_t len,
 	struct ion_buffer *buffer = NULL;
 	struct ion_heap *heap;
 	int ret;
+#if IS_ENABLED(CONFIG_MTK_ION_DEBUG)
 	unsigned long long start, end;
+#endif
 	unsigned int heap_mask = ~0;
 	unsigned int alloc_err_heap = 0;
 
@@ -521,7 +524,9 @@ struct ion_handle *__ion_alloc(struct ion_client *client, size_t len,
 	/*avoid camelcase, will modify in a letter*/
 	mmprofile_log_ex(ion_mmp_events[PROFILE_ALLOC], MMPROFILE_FLAG_START,
 			 (unsigned long)client, len);
+#if IS_ENABLED(CONFIG_MTK_ION_DEBUG)
 	start = sched_clock();
+#endif
 
 	/*
 	 * traverse the list of heaps available in this system in priority
@@ -581,6 +586,7 @@ struct ion_handle *__ion_alloc(struct ion_client *client, size_t len,
 	if (!ret && grab_handle)
 		ion_handle_get(handle);
 	mutex_unlock(&client->lock);
+#if IS_ENABLED(CONFIG_MTK_ION_DEBUG)
 	end = sched_clock();
 	if (ret) {
 		ion_handle_put(handle);
@@ -1810,11 +1816,13 @@ struct ion_handle *ion_import_dma_buf_fd(struct ion_client *client, int fd)
 	mmprofile_log_ex(ion_mmp_events[PROFILE_IMPORT], MMPROFILE_FLAG_END,
 			 (unsigned long)client,
 			 (unsigned long)handle);
+#if IS_ENABLED(CONFIG_MTK_ION_DEBUG)
 	if (!IS_ERR(handle)) {
 		handle->dbg.fd = fd;
 		handle->dbg.user_ts = sched_clock();
 		do_div(handle->dbg.user_ts, 1000000);
 	}
+#endif
 	return handle;
 }
 EXPORT_SYMBOL(ion_import_dma_buf_fd);
