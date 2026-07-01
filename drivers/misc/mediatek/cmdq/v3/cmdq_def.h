@@ -59,7 +59,7 @@
 #define CMDQ_MAX_RETRY_COUNT            (1)
 /* ram optimization related configuration */
 #ifdef CONFIG_MTK_GMO_RAM_OPTIMIZE
-#define CMDQ_MAX_RECORD_COUNT           (64)
+#define CMDQ_MAX_RECORD_COUNT           (8)
 #else
 #define CMDQ_MAX_RECORD_COUNT           (128)
 #endif
