@@ -586,7 +586,7 @@ s32 cmdq_core_interpret_instruction(char *textBuf, s32 bufLen,
 			reg_addr = cmdq_core_subsys_to_reg_addr(arg_addr);
 			reqLen = snprintf(textBuf, bufLen,
 				"addr:0x%08x [%s], ", reg_addr & addr_mask,
-				cmdq_get_func()->parseModule(reg_addr));
+				cmdq_virtual_parse_module_from_reg_addr(reg_addr));
 		}
 		if (reqLen >= bufLen)
 			pr_debug("%s:%d reqLen:%d over bufLen:%d\n",
@@ -692,7 +692,7 @@ s32 cmdq_core_interpret_instruction(char *textBuf, s32 bufLen,
 	case CMDQ_CODE_LOGIC:
 		{
 			const u32 subsys_bit =
-				cmdq_get_func()->getSubsysLSBArgA();
+				cmdq_virtual_get_subsys_LSB_in_arg_a();
 			const u32 s_op =
 				(arg_a & CMDQ_ARG_A_SUBSYS_MASK) >> subsys_bit;
 
@@ -785,7 +785,7 @@ s32 cmdq_core_interpret_instruction(char *textBuf, s32 bufLen,
 	case CMDQ_CODE_JUMP_C_ABSOLUTE:
 		{
 			const u32 subsys_bit =
-				cmdq_get_func()->getSubsysLSBArgA();
+				cmdq_virtual_get_subsys_LSB_in_arg_a();
 			const u32 s_op =
 				(arg_a & CMDQ_ARG_A_SUBSYS_MASK) >> subsys_bit;
 			const u32 arg_a_i = arg_a & 0xFFFF;
@@ -1093,7 +1093,7 @@ static int cmdq_core_print_record(const struct RecordStruct *pRecord,
 		index, pRecord->user, pRecord->scenario, pRecord->engineFlag,
 		pRecord->priority, pRecord->is_secure, pRecord->size,
 		pRecord->thread,
-		cmdq_get_func()->priority(pRecord->scenario));
+		cmdq_virtual_priority_from_scenario(pRecord->scenario));
 	if (length >= bufLen)
 		pr_debug("%s:%d length:%d over bufLen:%d\n%s\n",
 			__func__, __LINE__, length, bufLen, buf);
@@ -1283,7 +1283,7 @@ int cmdq_core_print_status_seq(struct seq_file *m, void *v)
 	 * use seq_puts to speed up outputs
 	 */
 	seq_puts(m, "====== Clock Status =======\n");
-	cmdq_get_func()->printStatusSeqClock(m);
+	cmdq_virtual_print_status_seq_clock(m);
 #endif
 
 	seq_puts(m, "====== DMA Mask Status =======\n");
@@ -1356,7 +1356,7 @@ EXPORT_SYMBOL(cmdq_core_print_status_seq);
 
 static s32 cmdq_core_get_thread_id(s32 scenario)
 {
-	return cmdq_get_func()->getThreadID(scenario, false);
+	return cmdq_virtual_get_thread_index(scenario, false);
 }
 
 struct cmdqSecSharedMemoryStruct *cmdq_core_get_secure_shared_memory(void)
@@ -2172,7 +2172,7 @@ void cmdq_core_reset_gce(void)
 	 * 1. clock-on
 	 * 2. reset all events
 	 */
-	cmdq_get_func()->enableGCEClockLocked(true);
+	cmdq_virtual_enable_gce_clock_locked(true);
 	cmdq_core_reset_hw_events();
 	cmdq_core_config_prefetch_gsize();
 #ifdef CMDQ_ENABLE_BUS_ULTRA
@@ -2185,7 +2185,7 @@ void cmdq_core_reset_gce(void)
 			cmdq_dts.ctl_int0);
 	}
 	/* Restore event */
-	cmdq_get_func()->eventRestore();
+	cmdq_virtual_event_restore();
 }
 EXPORT_SYMBOL(cmdq_core_reset_gce);
 
@@ -2201,7 +2201,7 @@ EXPORT_SYMBOL(cmdq_core_set_addon_subsys);
 
 u32 cmdq_core_subsys_to_reg_addr(u32 arg_a)
 {
-	const u32 subsysBit = cmdq_get_func()->getSubsysLSBArgA();
+	const u32 subsysBit = cmdq_virtual_get_subsys_LSB_in_arg_a();
 	const s32 subsys_id = (arg_a & CMDQ_ARG_A_SUBSYS_MASK) >> subsysBit;
 	u32 offset = 0;
 	u32 base_addr = 0;
@@ -2617,7 +2617,7 @@ static void cmdq_core_parse_handle_error(const struct cmdqRecStruct *handle,
 
 	do {
 		/* confirm if SMI is hang */
-		isSMIHang = cmdq_get_func()->dumpSMI(0);
+		isSMIHang = cmdq_virtual_dump_smi(0);
 		if (isSMIHang) {
 			module = "SMI";
 			break;
@@ -2648,7 +2648,7 @@ static void cmdq_core_parse_handle_error(const struct cmdqRecStruct *handle,
 		arg_b = insts[0];
 
 		/* quick exam by hwflag first */
-		module = cmdq_get_func()->parseHandleErrorModule(handle);
+		module = cmdq_virtual_parse_handle_error_module_by_hwflag_impl(handle);
 		if (module != NULL)
 			break;
 
@@ -2656,12 +2656,12 @@ static void cmdq_core_parse_handle_error(const struct cmdqRecStruct *handle,
 		case CMDQ_CODE_POLL:
 		case CMDQ_CODE_WRITE:
 			addr = cmdq_core_subsys_to_reg_addr(arg_a);
-			module = cmdq_get_func()->parseModule(addr);
+			module = cmdq_virtual_parse_module_from_reg_addr(addr);
 			break;
 		case CMDQ_CODE_WFE:
 			/* arg_a is the event ID */
 			eventENUM = cmdq_core_reverse_event_enum(arg_a);
-			module = cmdq_get_func()->moduleFromEvent(eventENUM,
+			module = cmdq_virtual_module_from_event_id(eventENUM,
 				cmdq_group_cb, handle->engineFlag);
 			break;
 		case CMDQ_CODE_READ:
@@ -3130,14 +3130,13 @@ static void cmdq_core_attach_engine_error(
 	u64 print_eng_flag = 0;
 	u64 engine_bit = 0;
 	CmdqMdpGetEngineGroupBits get_engine_group_bit = NULL;
-	CmdqIsDispScenario is_disp_scen = NULL;
 	struct CmdqCBkStruct *callback = NULL;
 	static const char *const engineGroupName[] = {
 		CMDQ_FOREACH_GROUP(GENERATE_STRING)
 	};
 
 	CMDQ_ERR("============ [CMDQ] SMI Status ============\n");
-	cmdq_get_func()->dumpSMI(1);
+	cmdq_virtual_dump_smi(1);
 
 	if (short_log) {
 		CMDQ_ERR("============ skip detail error dump ============\n");
@@ -3146,7 +3145,6 @@ static void cmdq_core_attach_engine_error(
 
 	print_eng_flag = handle->engineFlag;
 	get_engine_group_bit = cmdq_mdp_get_func()->getEngineGroupBits;
-	is_disp_scen = cmdq_get_func()->isDispScenario;
 
 	if (nginfo)
 		print_eng_flag |= nginfo->engine_flag;
@@ -3180,10 +3178,11 @@ static void cmdq_core_attach_engine_error(
 	}
 
 	/* force dump DISP for DISP scenario with 0x0 engine flag */
-	disp_scn = is_disp_scen(handle->scenario);
+	disp_scn = cmdq_virtual_is_disp_scenario(handle->scenario);
 
 	if (nginfo)
-		disp_scn = disp_scn | is_disp_scen(nginfo->scenario);
+		disp_scn = disp_scn |
+			cmdq_virtual_is_disp_scenario(nginfo->scenario);
 
 	if (disp_scn) {
 		index = CMDQ_GROUP_DISP;
@@ -3365,7 +3364,7 @@ static void cmdq_core_handle_devapc_vio(void)
 	cmdq_mdp_dump_engine_usage();
 	cmdq_mdp_dump_thread_usage();
 
-	cmdq_get_func()->dumpSMI(0);
+	cmdq_virtual_dump_smi(0);
 }
 #endif
 
@@ -3567,9 +3566,9 @@ static void cmdq_core_clk_disable(struct cmdqRecStruct *handle)
 
 	if (clock_count == 0) {
 		/* Backup event */
-		cmdq_get_func()->eventBackup();
+		cmdq_virtual_event_backup();
 		/* clock-off */
-		cmdq_get_func()->enableGCEClockLocked(false);
+		cmdq_virtual_enable_gce_clock_locked(false);
 	} else if (clock_count < 0) {
 		CMDQ_ERR(
 			"enable clock %s error usage:%d smi use:%d\n",
@@ -3942,7 +3941,7 @@ s32 cmdq_core_suspend(void)
 	CMDQ_LOG("%s usage:%d exec thread:0x%x\n",
 		__func__, ref_count, exec_thread);
 
-	if (cmdq_get_func()->moduleEntrySuspend(cmdq_mdp_get_engines()) < 0) {
+	if (cmdq_virtual_can_module_entry_suspend(cmdq_mdp_get_engines()) < 0) {
 		CMDQ_ERR(
 			"[SUSPEND] MDP running, kill tasks. threads:0x%08x ref:%d\n",
 			exec_thread, ref_count);
