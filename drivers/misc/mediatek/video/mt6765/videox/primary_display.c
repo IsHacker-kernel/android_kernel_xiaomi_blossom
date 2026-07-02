@@ -167,7 +167,7 @@ atomic_t primary_display_frame_update_event = ATOMIC_INIT(0);
 enum DISP_PRIMARY_PATH_MODE primary_display_mode = DIRECT_LINK_MODE;
 int primary_display_def_dst_mode;
 int primary_display_cur_dst_mode;
-unsigned long long last_primary_trigger_time;
+unsigned long last_primary_trigger_jiffies;
 bool is_switched_dst_mode;
 int primary_trigger_cnt;
 unsigned int dynamic_fps_changed;
@@ -363,7 +363,8 @@ int primary_display_config_full_roi(struct disp_ddp_path_config *pconfig,
 
 static void _disp_primary_path_switch_dst_mode_work(struct work_struct *work)
 {
-	if (((sched_clock() - last_primary_trigger_time) / 1000) > 500000) {
+	if (time_after(jiffies,
+		last_primary_trigger_jiffies + msecs_to_jiffies(500))) {
 		primary_display_switch_dst_mode(0);
 		is_switched_dst_mode = true;
 	} else {
@@ -5170,10 +5171,10 @@ static int primary_display_trigger_nolock(int blocking, void *callback,
 	int need_merge)
 {
 	int ret = 0;
+	last_primary_trigger_jiffies = jiffies;
 
 	DISPFUNC();
 
-	last_primary_trigger_time = sched_clock();
 	if (is_switched_dst_mode) {
 		/* swith to vdo mode if trigger disp */
 		primary_display_switch_dst_mode(1);
