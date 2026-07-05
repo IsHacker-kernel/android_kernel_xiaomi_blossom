@@ -112,9 +112,6 @@
  *   those tasks through the mainline slow path.
  */
 #define SCHED_FEAT_EAS_PREFER_IDLE 1
-#ifdef CONFIG_MTK_SCHED_LB_ENHANCEMENT
-#define SCHED_FEAT_SCHED_MTK_EAS 1
-#else
 #define SCHED_FEAT_SCHED_MTK_EAS 0
 #endif
 
