@@ -7307,9 +7307,9 @@ fail:
  *
  * preempt must be disabled.
  */
-static int
-select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_flags,
-		    int sibling_count_hint)
+static int __hot
+select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag,
+		int wake_flags, int sibling_count_hint)
 {
 	struct sched_domain *tmp, *sd = NULL;
 	int cpu = smp_processor_id();
@@ -7375,21 +7375,6 @@ sd_loop:
 	rcu_read_unlock();
 
 	return new_cpu;
-}
-
-static inline int
-select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag,
-	int wake_flags, int sibling_count_hint)
-{
-	int result = 0;
-	int cpu;
-
-	result = SELECT_TASK_RQ_FAIR(p, prev_cpu, sd_flag, wake_flags,
-		sibling_count_hint);
-	cpu = (result & LB_CPU_MASK);
-
-	return cpu;
->>>>>>> dc3cb488f14b (sched: strip dead mtk branches)
 }
 
 static void detach_entity_cfs_rq(struct sched_entity *se);
