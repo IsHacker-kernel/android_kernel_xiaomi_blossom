@@ -2530,15 +2530,6 @@ unsigned long scale_irq_capacity(unsigned long util, unsigned long irq, unsigned
 #define perf_domain_span(pd) NULL
 #endif /* CONFIG_ENERGY_MODEL && CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
 
-#define LB_POLICY_SHIFT		16
-#define LB_CPU_MASK		((1 << LB_POLICY_SHIFT) - 1)
-
-#define LB_PREV			(0x0 << LB_POLICY_SHIFT)
-#define LB_EAS			(0x1 << LB_POLICY_SHIFT)
-#define LB_WAKE_AFFINE		(0x2 << LB_POLICY_SHIFT)
-#define LB_IDLEST		(0x4 << LB_POLICY_SHIFT)
-#define LB_IDLE_SIBLING		(0x8 << LB_POLICY_SHIFT)
-
 #ifdef CONFIG_SMP
 extern struct static_key_false sched_energy_present;
 #endif
