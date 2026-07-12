@@ -88,7 +88,14 @@ static LIST_HEAD(info_pool_head);
 static DEFINE_MUTEX(_disp_fence_mutex);
 static DEFINE_MUTEX(fence_buffer_mutex);
 
+#ifdef CONFIG_MTK_ENABLE_GMO
+static struct disp_session_sync_info
+	*_disp_fence_context[MAX_SESSION_COUNT];
+#define DISP_FENCE_CONTEXT(i) (_disp_fence_context[i])
+#else
 struct disp_session_sync_info _disp_fence_context[MAX_SESSION_COUNT];
+#define DISP_FENCE_CONTEXT(i) (&_disp_fence_context[i])
+#endif
 
 static struct disp_session_sync_info *_get_session_sync_info(
 	unsigned int session_id)
@@ -109,21 +116,27 @@ static struct disp_session_sync_info *_get_session_sync_info(
 
 	mutex_lock(&_disp_fence_mutex);
 	for (i = 0; i < ARRAY_SIZE(_disp_fence_context); i++) {
-		if (session_id == _disp_fence_context[i].session_id) {
-			session_info = &(_disp_fence_context[i]);
+		session_info = DISP_FENCE_CONTEXT(i);
+		if (session_info && session_id == session_info->session_id) {
 			goto done;
 		}
 	}
 
 	for (i = 0; i < ARRAY_SIZE(_disp_fence_context); i++) {
-		if (_disp_fence_context[i].session_id != 0xffffffff)
+		session_info = DISP_FENCE_CONTEXT(i);
+#ifdef CONFIG_MTK_ENABLE_GMO
+		if (session_info)
 			continue;
+		session_info = kzalloc(sizeof(*session_info), GFP_KERNEL);
+		if (!session_info)
+			goto done;
+		_disp_fence_context[i] = session_info;
+#else
+		if (session_info->session_id != 0xffffffff)
+			continue;
+#endif
 
-		DISPMSG(
-			"not found session info for session_id:0x%08x,insert %p to array index:%d\n",
-			session_id, &(_disp_fence_context[i]), i);
-		_disp_fence_context[i].session_id = session_id;
-		session_info = &(_disp_fence_context[i]);
+		session_info->session_id = session_id;
 
 		sprintf(name, "%s%d_prepare", disp_session_mode_spy(session_id),
 			DISP_SESSION_DEV(session_id));
@@ -239,6 +252,7 @@ static struct disp_session_sync_info *_get_session_sync_info(
 
 		goto done;
 	}
+	session_info = NULL;
 
 done:
 
@@ -843,15 +857,17 @@ unsigned int mtkfb_query_frm_seq_by_addr(unsigned int session_id,
 
 int disp_sync_init(void)
 {
-	int i = 0;
+#ifndef CONFIG_MTK_ENABLE_GMO
+	int i;
 	struct disp_session_sync_info *session_info = NULL;
 
 	memset((void *)&_disp_fence_context, 0, sizeof(_disp_fence_context));
 
 	for (i = 0; i < ARRAY_SIZE(_disp_fence_context) ; i++) {
-		session_info = &_disp_fence_context[i];
+		session_info = DISP_FENCE_CONTEXT(i);
 		session_info->session_id = 0xffffffff;
 	}
+#endif
 
 	DISPMSG("Fence timeline idx: present = %d, output = %d\n",
 		disp_sync_get_present_timeline_id(),
