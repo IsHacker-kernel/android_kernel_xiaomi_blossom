@@ -3002,7 +3002,9 @@ static const struct vm_operations_struct vcodec_remap_vm_ops = {
 
 static int vcodec_mmap(struct file *file, struct vm_area_struct *vma)
 {
+#ifndef CONFIG_MTK_ENABLE_GMO
 	unsigned int u4I = 0;
+#endif
 	unsigned long length;
 	unsigned long pfn;
 
@@ -3017,6 +3019,11 @@ static int vcodec_mmap(struct file *file, struct vm_area_struct *vma)
 			(pfn > HW_BASE+HW_REGION)) &&
 		((length > INFO_REGION) || (pfn < INFO_BASE) ||
 			(pfn > INFO_BASE+INFO_REGION))) {
+#ifdef CONFIG_MTK_ENABLE_GMO
+		pr_info("mmap region error: Len(0x%lx),pfn(0x%lx)",
+			 (unsigned long)length, pfn);
+		return -EAGAIN;
+#else
 		unsigned long ulAddr, ulSize;
 
 		for (u4I = 0; u4I < VCODEC_INST_NUM_x_10; u4I++) {
@@ -3038,6 +3045,7 @@ static int vcodec_mmap(struct file *file, struct vm_area_struct *vma)
 				 (unsigned long)length, pfn);
 			return -EAGAIN;
 		}
+#endif
 	}
 
 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
