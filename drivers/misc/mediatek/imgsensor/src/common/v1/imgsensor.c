@@ -76,7 +76,9 @@ static DEFINE_MUTEX(gimgsensor_mutex);
 
 struct IMGSENSOR  gimgsensor;
 struct IMGSENSOR *pgimgsensor = &gimgsensor;
+#ifndef CONFIG_MTK_ENABLE_GMO
 MUINT32 last_id;
+#endif
 
 /*prevent imgsensor race condition in vulunerbility test*/
 struct mutex imgsensor_mutex;
@@ -825,7 +827,9 @@ static inline int adopt_CAMERA_HW_GetInfo2(void *pBuf)
 	MSDK_SENSOR_INFO_STRUCT *pInfo4 = NULL;
 	MSDK_SENSOR_CONFIG_STRUCT  *pConfig4 = NULL;
 	MSDK_SENSOR_RESOLUTION_INFO_STRUCT  *psensorResolution = NULL;
+#ifndef CONFIG_MTK_ENABLE_GMO
 	char *pmtk_ccm_name = NULL;
+#endif
 
 	pSensorGetInfo = (struct IMAGESENSOR_GETINFO_STRUCT *)pBuf;
 	if (pSensorGetInfo == NULL ||
@@ -1085,6 +1089,7 @@ static inline int adopt_CAMERA_HW_GetInfo2(void *pBuf)
 				psensorResolution->SensorVideoWidth,
 				psensorResolution->SensorVideoHeight);
 
+#ifndef CONFIG_MTK_ENABLE_GMO
 	if (pSensorGetInfo->SensorId <= last_id) {
 		memset(mtk_ccm_name, 0, camera_info_size);
 		PK_DBG("memset ok");
@@ -1175,6 +1180,7 @@ static inline int adopt_CAMERA_HW_GetInfo2(void *pBuf)
 		camera_info_size - (int)(pmtk_ccm_name - mtk_ccm_name),
 		"\nHDR_Support(0:NO HDR,1: iHDR,2:mvHDR,3:zHDR)=%2d",
 		pSensorInfo->HDR_Support);
+#endif
 
 	/* Resolution */
 	if (copy_to_user(
@@ -3059,4 +3065,3 @@ module_exit(imgsensor_exit);
 MODULE_DESCRIPTION("image sensor driver");
 MODULE_AUTHOR("Mediatek");
 MODULE_LICENSE("GPL v2");
-
