@@ -1173,7 +1173,9 @@ static VOID consys_set_dl_rom_patch_flag(INT32 flag)
 
 static INT32 consys_dedicated_log_path_init(struct platform_device *pdev)
 {
-#if 0
+#ifdef CONFIG_MTK_ENABLE_GMO
+	return 0;
+#else
 	struct device_node *node;
 	UINT32 irq_num;
 	UINT32 irq_flag;
@@ -1203,10 +1205,12 @@ static INT32 consys_dedicated_log_path_init(struct platform_device *pdev)
 	fw_log_wmt_init();
 #endif
 	return 0;
+#endif
 }
 
 static VOID consys_dedicated_log_path_deinit(VOID)
 {
+#ifndef CONFIG_MTK_ENABLE_GMO
 #ifdef CONFIG_MTK_CONNSYS_DEDICATED_LOG_PATH
 	fw_log_wmt_deinit();
 #endif
