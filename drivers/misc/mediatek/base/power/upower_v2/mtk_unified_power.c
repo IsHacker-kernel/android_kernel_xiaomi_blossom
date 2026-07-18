@@ -331,11 +331,11 @@ static void upower_init_rownum(void)
 		upower_tbl_ref[i].row_num = UPOWER_OPP_NUM;
 }
 
-static unsigned int eem_is_enabled(void)
-{
-/* #ifndef EARLY_PORTING_EEM */
-	return mt_eem_is_enabled();
-}
+/*static unsigned int eem_is_enabled(void)
+{*/
+// #ifndef EARLY_PORTING_EEM
+/*	return mt_eem_is_enabled();
+}*/
 
 static void upower_wait_for_eem_volt_done(void)
 {
@@ -831,8 +831,12 @@ static int __init upower_init(void)
 
 	upower_init_cap();
 
+	upower_debug("eem is not enabled\n");
+	upower_init_lkgidx();
+	upower_init_volt();
+
 	/* apply orig volt and lkgidx, if eem is not enabled*/
-	if (!eem_is_enabled()) {
+	/*if (!eem_is_enabled()) {
 		upower_debug("eem is not enabled\n");
 		upower_init_lkgidx();
 		upower_init_volt();
@@ -845,7 +849,7 @@ static int __init upower_init(void)
 		confirm_volt();
 #endif
 		upower_wait_for_eem_volt_done();
-	}
+	}*/
 	upower_update_dyn_pwr();
 	upower_update_lkg_pwr();
 	get_L_pwr_efficiency();
