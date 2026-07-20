@@ -1956,21 +1956,11 @@ static int __init wmt_tm_init(void)
 	err = wmt_tm_proc_register();
 	if (err)
 		return err;
-/* init a timer for stats tx bytes */
-	wmt_stats_info.pre_time = 0;
-	wmt_stats_info.pre_tx_bytes = 0;
-
-	timer_setup(&wmt_stats_timer, wmt_cal_stats, TIMER_DEFERRABLE);
-	wmt_stats_timer.expires = jiffies + 1 * HZ;
-	add_timer(&wmt_stats_timer);
 
 
 	err = wmt_tm_thz_cl_register();
 	if (err)
 		return err;
-
-	mtkTTimer_register("mtktswmt", mtkts_wmt_start_thermal_timer,
-					mtkts_wmt_cancel_thermal_timer);
 
 	wmt_tm_printk("[%s] end <--\n", __func__);
 
@@ -1990,9 +1980,6 @@ static void __exit wmt_tm_deinit(void)
 	err = wmt_tm_proc_unregister();
 	if (err)
 		return;
-
-	mtkTTimer_unregister("mtktswmt");
-	del_timer(&wmt_stats_timer);
 }
 
 /* EXPORT_SYMBOL(wifi_in_soc_throttle_enable); */
