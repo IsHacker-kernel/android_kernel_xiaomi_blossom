@@ -137,7 +137,6 @@ static struct notifier_block mtk_spm_cpu_pm_notifier_block = {
 };
 #endif
 
-static unsigned int spm_irq_0;
 #if defined(CONFIG_MTK_GIC_V3_EXT)
 static struct mtk_irq_mask irq_mask;
 #endif
@@ -147,7 +146,6 @@ void mtk_spm_irq_backup(void)
 #if defined(CONFIG_MTK_GIC_V3_EXT)
 	spm_in_idle = true;
 	mt_irq_mask_all(&irq_mask);
-	mt_irq_unmask_for_sleep_ex(spm_irq_0);
 	mtk_spm_unmask_edge_trig_irqs_for_cirq();
 #endif
 
@@ -236,47 +234,3 @@ static irqreturn_t spm_irq0_handler(int irq, void *dev_id)
 
 	return IRQ_HANDLED;
 }
-
-struct spm_irq_desc {
-	unsigned int irq;
-	irq_handler_t handler;
-};
-
-int mtk_spm_irq_register(unsigned int spmirq0)
-{
-	int i, err, r = 0;
-	struct spm_irq_desc irqdesc[] = {
-		{.irq = 0, .handler = spm_irq0_handler,}
-	};
-	irqdesc[0].irq = spmirq0;
-	for (i = 0; i < ARRAY_SIZE(irqdesc); i++) {
-		if (cpu_present(i)) {
-			err = request_irq(irqdesc[i].irq, irqdesc[i].handler,
-				IRQF_TRIGGER_LOW |
-				IRQF_NO_SUSPEND |
-				IRQF_PERCPU,
-				"SPM", NULL);
-			if (err) {
-				pr_info("[SPM] FAILED TO REQUEST IRQ%d (%d)\n",
-					i, err);
-				r = -EPERM;
-			}
-		}
-	}
-
-	/* Assing local spm_irq_0 */
-	spm_irq_0 = spmirq0;
-
-	mtk_spm_get_edge_trigger_irq();
-
-#ifdef CONFIG_FAST_CIRQ_CLONE_FLUSH
-	set_wakeup_sources(edge_trig_irqs, IRQ_NUMBER);
-#endif
-
-	#if defined(CONFIG_MTK_GIC_V3_EXT)
-	cpu_pm_register_notifier(&mtk_spm_cpu_pm_notifier_block);
-	#endif
-
-	return r;
-}
-
