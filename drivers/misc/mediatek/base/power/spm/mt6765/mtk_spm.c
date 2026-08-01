@@ -108,8 +108,8 @@ static void spm_register_init()
 	if (!sleep_reg_md_base)
 		pr_info("[SPM] base sleep_reg_md_base failed\n");
 
-	pr_info("[SPM] spm_base = %p, sleep_reg_md_base = %p, spm_irq_0 = %d\n",
-		spm_base, sleep_reg_md_base, spmirq0);
+	pr_info("[SPM] spm_base = %p, sleep_reg_md_base = %p\n",
+		spm_base, sleep_reg_md_base);
 }
 
 static ssize_t debug_log_show(
