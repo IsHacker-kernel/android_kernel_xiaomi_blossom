@@ -164,7 +164,6 @@ int spm_load_firmware_status(void);
  * mtk_spm_irq.c
  ***********************************************************/
 
-int mtk_spm_irq_register(unsigned int spm_irq_0);
 void mtk_spm_irq_backup(void);
 void mtk_spm_irq_restore(void);
 
