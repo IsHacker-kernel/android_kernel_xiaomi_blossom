@@ -41,7 +41,7 @@ static ssize_t cpufreq_dummy_show(struct kobject *kobj, struct attribute *attr, 
 	return ret;
 }
 
-static ssize_t cpufreq_dummy_store(struct kobject *kobj, struct attribute *attr, char *buf, size_t count)
+static ssize_t cpufreq_dummy_store(struct kobject *kobj, struct attribute *attr, const char *buf, size_t count)
 {
 	int ret;
 	ret = kstrtoint(buf, 10, &freq);
