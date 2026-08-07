@@ -283,8 +283,9 @@ void printk_safe_flush_on_panic(void)
 	if (raw_spin_is_locked(&logbuf_lock)) {
 		if (num_online_cpus() > 1)
 			return;
-
+#ifdef CONFIG_DEBUG_KERNEL
 		debug_locks_off();
+#endif
 		raw_spin_lock_init(&logbuf_lock);
 	}
 
@@ -292,7 +293,9 @@ void printk_safe_flush_on_panic(void)
 		if (num_online_cpus() > 1)
 			return;
 
+#ifdef CONFIG_DEBUG_KERNEL
 		debug_locks_off();
+#endif
 		raw_spin_lock_init(&safe_read_lock);
 	}
 
