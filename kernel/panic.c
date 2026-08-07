@@ -316,7 +316,9 @@ void panic(const char *fmt, ...)
 	 * should be disabled to avoid reporting bad unlock balance when
 	 * panic() is not being callled from OOPS.
 	 */
+#ifdef CONFIG_DEBUG_KERNEL
 	debug_locks_off();
+#endif
 	console_flush_on_panic();
 
 	if (!panic_blink)
@@ -456,8 +458,10 @@ unsigned long get_taint(void)
  */
 void add_taint(unsigned flag, enum lockdep_ok lockdep_ok)
 {
+#ifdef CONFIG_DEBUG_KERNEL
 	if (lockdep_ok == LOCKDEP_NOW_UNRELIABLE && __debug_locks_off())
 		pr_warn("Disabling lock debugging due to kernel taint\n");
+#endif
 
 	set_bit(flag, &tainted_mask);
 }
@@ -539,7 +543,9 @@ void oops_enter(void)
 {
 	tracing_off();
 	/* can't trust the integrity of the kernel anymore: */
+#ifdef CONFIG_DEBUG_KERNEL
 	debug_locks_off();
+#endif
 	do_oops_enter_exit();
 }
 
