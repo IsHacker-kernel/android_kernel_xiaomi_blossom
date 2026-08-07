@@ -74,7 +74,6 @@ void __iomem *spm_base;
 void __iomem *sleep_reg_md_base;
 
 static struct platform_device *pspmdev;
-static struct wakeup_source *spm_wakelock;
 
 /* FIXME: should not used externally !!! */
 void *mt_spm_base_get(void)
@@ -82,11 +81,6 @@ void *mt_spm_base_get(void)
 	return spm_base;
 }
 EXPORT_SYMBOL(mt_spm_base_get);
-
-void spm_pm_stay_awake(int sec)
-{
-	__pm_wakeup_event(spm_wakelock, jiffies_to_msecs(HZ * sec));
-}
 
 static void spm_register_init()
 {
@@ -184,11 +178,6 @@ static int spm_module_init(void)
 	struct mtk_idle_sysfs_handle pParent2ND;
 	struct mtk_idle_sysfs_handle *pParent = NULL;
 
-	spm_wakelock = wakeup_source_register(NULL, "spm");
-	if (spm_wakelock == NULL) {
-		pr_debug("fail to request spm_wakelock\n");
-		return ret;
-	}
 	spm_register_init();
 
 #if defined(CONFIG_PM)

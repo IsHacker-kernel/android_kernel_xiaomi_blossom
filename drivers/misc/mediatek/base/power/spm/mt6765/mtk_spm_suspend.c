@@ -399,12 +399,6 @@ RESTORE_IRQ:
 #endif
 	spm_suspend_footprint(0);
 
-	if (pwrctrl->wakelock_timer_val) {
-		pr_debug("[name:spm&][SPM ]#@# %s(%d) calling spm_pm_stay_awake()\n",
-			__func__, __LINE__);
-		spm_pm_stay_awake(pwrctrl->wakelock_timer_val);
-	}
-
 	return last_wr;
 }
 
