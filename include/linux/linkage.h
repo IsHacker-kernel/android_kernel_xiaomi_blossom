@@ -44,6 +44,10 @@
 	SYM_END(name, SYM_T_FUNC)
 #endif
 
+/* SYM_T_NONE -- type used by assembler to mark entries of unknown type */
+#ifndef SYM_T_NONE
+#define SYM_T_NONE				STT_NOTYPE
+#endif
 
 #ifndef cond_syscall
 #define cond_syscall(x)	asm(				\
