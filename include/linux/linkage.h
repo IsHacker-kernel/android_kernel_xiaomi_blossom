@@ -22,6 +22,29 @@
 #define asmlinkage CPP_ASMLINKAGE
 #endif
 
+/* SYM_INNER_LABEL -- only for labels in the middle of code */
+#ifndef SYM_INNER_LABEL
+#define SYM_INNER_LABEL(name, linkage)		\
+	.type name SYM_T_NONE ASM_NL			\
+	SYM_ENTRY(name, linkage, SYM_A_NONE)
+#endif
+
+/* SYM_FUNC_START -- use for global functions */
+#ifndef SYM_FUNC_START
+#define SYM_FUNC_START(name)				\
+	SYM_START(name, SYM_L_GLOBAL, SYM_A_ALIGN)
+#endif
+
+/*
+ * SYM_FUNC_END -- the end of SYM_FUNC_START_LOCAL, SYM_FUNC_START,
+ * SYM_FUNC_START_WEAK, ...
+ */
+#ifndef SYM_FUNC_END
+#define SYM_FUNC_END(name)				\
+	SYM_END(name, SYM_T_FUNC)
+#endif
+
+
 #ifndef cond_syscall
 #define cond_syscall(x)	asm(				\
 	".weak " __stringify(x) "\n\t"			\
