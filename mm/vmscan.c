@@ -104,57 +104,6 @@ struct scan_control {
 	/* One of the zones is ready for compaction */
 	unsigned int compaction_ready:1;
 
-#ifdef CONFIG_VM_EVENT_COUNTERS
-DEFINE_PER_CPU(struct vm_event_state, vm_event_states) = {{0}};
-EXPORT_PER_CPU_SYMBOL(vm_event_states);
-
-static void sum_vm_events(unsigned long *ret)
-{
-	int cpu;
-	int i;
-
-	memset(ret, 0, NR_VM_EVENT_ITEMS * sizeof(unsigned long));
-
-	for_each_online_cpu(cpu) {
-		struct vm_event_state *this = &per_cpu(vm_event_states, cpu);
-
-		for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
-			ret[i] += this->event[i];
-	}
-}
-
-/*
- * Accumulate the vm event counters across all CPUs.
- * The result is unavoidably approximate - it can change
- * during and after execution of this function.
-*/
-void all_vm_events(unsigned long *ret)
-{
-	cpus_read_lock();
-	sum_vm_events(ret);
-	cpus_read_unlock();
-}
-EXPORT_SYMBOL_GPL(all_vm_events);
-
-/*
- * Fold the foreign cpu events into our own.
- *
- * This is adding to the events on one processor
- * but keeps the global counts constant.
- */
-void vm_events_fold_cpu(int cpu)
-{
-	struct vm_event_state *fold_state = &per_cpu(vm_event_states, cpu);
-	int i;
-
-	for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
-		count_vm_events(i, fold_state->event[i]);
-		fold_state->event[i] = 0;
-	}
-}
-
-#endif /* CONFIG_VM_EVENT_COUNTERS */
-
 #ifdef CONFIG_LRU_GEN
 	/* help make better choices when multiple memcgs are available */
 	unsigned int memcgs_need_aging:1;
