@@ -200,9 +200,6 @@ static bool swap_sched_async_compress(struct page *page)
 	if (!current_is_kswapd())
 		return false;
 
-	if (!PageAnon(page))
-		return false;
-
 	sis = page_swap_info(page);
 	if (data_race(sis->flags & SWP_SYNCHRONOUS_IO)) {
 		if (kfifo_avail(&pgdat->kcompress_fifo) >= sizeof(page) &&
