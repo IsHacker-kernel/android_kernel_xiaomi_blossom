@@ -3,6 +3,9 @@
 # Cryptographic API
 #
 
+ccflags-y += -flto -O3 -ffast-math -mcpu=cortex-a53 -mtune=cortex-a53 -mfpu=asimd-vfpv4 -march=armv8-a
+subdir-ccflags-y += -flto -O3 -ffast-math -mcpu=cortex-a53 -mtune=cortex-a53 -mfpu=asimd-vfpv4 -march=armv8-a
+
 obj-$(CONFIG_CRYPTO) += crypto.o
 crypto-y := api.o cipher.o compress.o memneq.o
 
