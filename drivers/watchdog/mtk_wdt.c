@@ -19,7 +19,6 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
-#include <linux/reboot.h>
 #include <linux/reset-controller.h>
 #include <linux/string.h>
 #include <linux/types.h>
@@ -27,7 +26,6 @@
 
 #define WDT_MAX_TIMEOUT		31
 #define WDT_MIN_TIMEOUT		1
-#define WDT_RESTART_TIMEOUT	10
 #define WDT_LENGTH_TIMEOUT(n)	((n) << 5)
 
 #define WDT_LENGTH		0x04
@@ -71,9 +69,6 @@ static int mtk_wdt_stop(struct watchdog_device *wdt_dev);
 
 struct mtk_wdt_dev {
 	struct watchdog_device wdt_dev;
-
-	struct notifier_block reboot_nb;
-
 	void __iomem *wdt_base;
 	spinlock_t lock; /* protects WDT_SWSYSRST reg */
 	struct reset_controller_dev rcdev;
@@ -202,59 +197,6 @@ static void mtk_wdt_set_restart_mode(struct mtk_wdt_dev *mtk_wdt,
 	readl(wdt_base + WDT_NONRST2);
 }
 
-static bool mtk_wdt_needs_restart_fallback(const char *cmd)
-{
-	if (!cmd)
-		return false;
-
-	return mtk_wdt_cmd_matches(cmd, "recovery") ||
-	       !strcmp(cmd, "recovery-update") ||
-	       !strcmp(cmd, "reboot,recovery-update") ||
-	       mtk_wdt_cmd_matches(cmd, "bootloader") ||
-	       mtk_wdt_cmd_matches(cmd, "fastboot");
-}
-
-static void mtk_wdt_force_reset_mode(struct mtk_wdt_dev *mtk_wdt)
-{
-	void __iomem *wdt_base = mtk_wdt->wdt_base;
-	u32 mode;
-
-	mode = readl(wdt_base + WDT_MODE);
-	mode &= ~(WDT_MODE_DUAL_EN | WDT_MODE_IRQ_EN);
-	mode |= WDT_MODE_EN | WDT_MODE_EXRST_EN | WDT_BYPASS_PWR_KEY;
-	writel(WDT_MODE_KEY | mode, wdt_base + WDT_MODE);
-	readl(wdt_base + WDT_MODE);
-}
-
-static void mtk_wdt_arm_restart_fallback(struct mtk_wdt_dev *mtk_wdt)
-{
-	void __iomem *wdt_base = mtk_wdt->wdt_base;
-	u32 reg;
-
-	reg = WDT_LENGTH_TIMEOUT(WDT_RESTART_TIMEOUT << 6) | WDT_LENGTH_KEY;
-	writel(reg, wdt_base + WDT_LENGTH);
-	writel(WDT_RST_RELOAD, wdt_base + WDT_RST);
-	mtk_wdt_force_reset_mode(mtk_wdt);
-
-	set_bit(WDOG_HW_RUNNING, &mtk_wdt->wdt_dev.status);
-}
-
-static int mtk_wdt_reboot_notify(struct notifier_block *nb,
-				 unsigned long action, void *data)
-{
-	struct mtk_wdt_dev *mtk_wdt =
-		container_of(nb, struct mtk_wdt_dev, reboot_nb);
-	const char *cmd = data;
-
-	if (action != SYS_RESTART || !mtk_wdt_needs_restart_fallback(cmd))
-		return NOTIFY_DONE;
-
-	mtk_wdt_set_restart_mode(mtk_wdt, cmd);
-	mtk_wdt_arm_restart_fallback(mtk_wdt);
-
-	return NOTIFY_DONE;
-}
-
 static void mtk_wdt_parse_dt(struct device_node *np,
 				struct watchdog_device *wdt_dev)
 {
@@ -320,6 +262,7 @@ static int mtk_wdt_restart(struct watchdog_device *wdt_dev,
 {
 	struct mtk_wdt_dev *mtk_wdt = watchdog_get_drvdata(wdt_dev);
 	void __iomem *wdt_base = mtk_wdt->wdt_base;
+	u32 mode;
 
 	/*
 	 * device_shutdown() can stop the watchdog before machine_restart()
@@ -327,7 +270,11 @@ static int mtk_wdt_restart(struct watchdog_device *wdt_dev,
 	 * mode or the interrupt path enabled can turn a reboot request into a
 	 * watchdog interrupt followed by a delayed timeout reset.
 	 */
-	mtk_wdt_force_reset_mode(mtk_wdt);
+	mode = readl(wdt_base + WDT_MODE);
+	mode &= ~(WDT_MODE_DUAL_EN | WDT_MODE_IRQ_EN);
+	mode |= WDT_MODE_EN | WDT_MODE_EXRST_EN | WDT_BYPASS_PWR_KEY;
+	writel(WDT_MODE_KEY | mode, wdt_base + WDT_MODE);
+	readl(wdt_base + WDT_MODE);
 
 	mtk_wdt_set_restart_mode(mtk_wdt, data);
 
@@ -464,14 +411,6 @@ static int mtk_wdt_probe(struct platform_device *pdev)
 	dev_info(dev, "Watchdog enabled (timeout=%d sec, nowayout=%d)\n",
 		 mtk_wdt->wdt_dev.timeout, nowayout);
 
-	mtk_wdt->reboot_nb.notifier_call = mtk_wdt_reboot_notify;
-	mtk_wdt->reboot_nb.priority = 128;
-	err = register_reboot_notifier(&mtk_wdt->reboot_nb);
-	if (unlikely(err)) {
-		watchdog_unregister_device(&mtk_wdt->wdt_dev);
-		return err;
-	}
-
 	/*
 	 * PSCI reset can leave this platform stuck after reboot-mode notifiers
 	 * have already stored the boot reason. Route restart through the
@@ -487,27 +426,6 @@ static int mtk_wdt_probe(struct platform_device *pdev)
 			return err;
 	}
 	return 0;
-}
-
-static void mtk_wdt_shutdown(struct platform_device *pdev)
-{
-        struct mtk_wdt_dev *mtk_wdt = platform_get_drvdata(pdev);
-
-        if (system_state == SYSTEM_RESTART)
-                return;
-
-        if (watchdog_hw_running(&mtk_wdt->wdt_dev))
-                mtk_wdt_stop(&mtk_wdt->wdt_dev);
-}
-
-static int mtk_wdt_remove(struct platform_device *pdev)
-{
-        struct mtk_wdt_dev *mtk_wdt = platform_get_drvdata(pdev);
-
-        unregister_reboot_notifier(&mtk_wdt->reboot_nb);
-        watchdog_unregister_device(&mtk_wdt->wdt_dev);
-
-        return 0;
 }
 
 #if defined(CONFIG_PM_SLEEP) && defined(CONFIG_MEDIATEK_WATCHDOG_PM)
