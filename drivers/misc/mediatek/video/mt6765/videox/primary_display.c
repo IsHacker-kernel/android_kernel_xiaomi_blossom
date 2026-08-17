@@ -221,8 +221,6 @@ struct display_primary_path_context *_get_context(void)
 #ifdef CONFIG_MTK_HIGH_FRAME_RATE
 		g_context.first_cfg = 1;
 #endif
-	}
-	
 	return &g_context;
 }
 
@@ -4468,9 +4466,6 @@ int primary_display_suspend(void)
 		do_primary_display_switch_mode(DISP_SESSION_DIRECT_LINK_MODE,
 			pgc->session_id, 0, NULL, 1);
 	}
-
-	/* restore to 60 fps */
-	_display_set_lcm_refresh_rate(60);
 
 	/* restore to full roi */
 	suspend_to_full_roi();
