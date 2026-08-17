@@ -4140,7 +4140,6 @@ int primary_display_set_lcm_refresh_rate(int fps)
 	return 0;
 }
 
-<<<<<<< HEAD
 int primary_display_get_lcm_refresh_rate(void)
 {
 	return pgc->lcm_refresh_rate;
