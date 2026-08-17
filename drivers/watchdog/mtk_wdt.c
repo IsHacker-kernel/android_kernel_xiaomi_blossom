@@ -333,13 +333,6 @@ static int mtk_wdt_probe(struct platform_device *pdev)
 	dev_info(dev, "Watchdog enabled (timeout=%d sec, nowayout=%d)\n",
 		 mtk_wdt->wdt_dev.timeout, nowayout);
 
-	/*
-	 * PSCI reset can leave this platform stuck after reboot-mode notifiers
-	 * have already stored the boot reason. Route restart through the
-	 * watchdog core so the TOPRGU software reset is used.
-	 */
-	arm_pm_restart = NULL;
-
 	wdt_data = of_device_get_match_data(dev);
 	if (wdt_data) {
 		err = toprgu_register_reset_controller(pdev,
