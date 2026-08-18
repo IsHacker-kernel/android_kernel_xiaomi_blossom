@@ -404,14 +404,10 @@ static void cmdq_mdp_common_clock_disable(void)
 	s32 smi_ref = atomic_dec_return(&mdp_ctx.mdp_smi_usage);
 
 	CMDQ_MSG("[CLOCK]MDP SMI clock disable %d\n", smi_ref);
-<<<<<<< HEAD
-	cmdq_mdp_get_func()->mdpEnableCommonClock(false);
 
 	CMDQ_PROF_MMP(cmdq_mmp_get_event()->MDP_clock_smi,
 		MMPROFILE_FLAG_PULSE, smi_ref, 0);
-=======
 	cmdq_mdp_enable_common_clock(false);
->>>>>>> 6c25bbe81276 (cmdq: call mt6765 mdp hooks directly)
 }
 
 static s32 cmdq_mdp_clock_enable(u64 engine_flag)
@@ -2802,16 +2798,12 @@ int cmdq_mdp_loop_reset(enum CMDQ_ENG_ENUM engine,
 	int resetStatus = 0;
 	int initStatus = 0;
 
-<<<<<<< HEAD
-	if (cmdq_mdp_get_func()->mdpClockIsOn(engine)) {
+	if (cmdq_mdp_clock_is_on(engine)) {
 		CMDQ_PROF_START(current->pid, __func__);
 		CMDQ_PROF_MMP(cmdq_mmp_get_event()->MDP_reset,
 			      MMPROFILE_FLAG_START, resetReg, resetStateReg);
 
 
-=======
-	if (cmdq_mdp_clock_is_on(engine)) {
->>>>>>> 6c25bbe81276 (cmdq: call mt6765 mdp hooks directly)
 		/* loop reset */
 		resetStatus = cmdq_mdp_loop_reset_impl(resetReg, 0x1,
 			resetStateReg, resetMask, resetValue,
