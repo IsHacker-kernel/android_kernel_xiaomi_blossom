@@ -611,6 +611,7 @@ struct ion_handle *__ion_alloc(struct ion_client *client, size_t len,
 	ion_history_count_kick(true, len);
 #endif
 #endif
+#endif
 
 	return handle;
 }
