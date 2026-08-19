@@ -9730,6 +9730,7 @@ void wlanTxLifetimeTagPacket(IN struct ADAPTER *prAdapter,
 			     IN struct MSDU_INFO *prMsduInfo,
 			     IN enum ENUM_TX_PROFILING_TAG eTag)
 {
+#if CFG_ENABLE_PER_STA_STATISTICS
 	struct PKT_PROFILE *prPktProfile = &prMsduInfo->rPktProfile;
 
 	if (!wlanTxLifetimeIsProfilingEnabled(prAdapter))
@@ -9767,14 +9768,13 @@ void wlanTxLifetimeTagPacket(IN struct ADAPTER *prAdapter,
 		if (prPktProfile->fgIsValid) {
 			prPktProfile->rHifTxDoneTimestamp = (OS_SYSTIME)
 							    kalGetTimeTick();
-#if CFG_ENABLE_PER_STA_STATISTICS
 			wlanTxLifetimeUpdateStaStats(prAdapter, prMsduInfo);
-#endif
 		}
 		break;
 	default:
 		break;
 	}
+#endif
 }
 
 void wlanTxProfilingTagPacket(IN struct ADAPTER *prAdapter,
