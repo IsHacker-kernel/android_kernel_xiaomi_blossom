@@ -7307,8 +7307,7 @@ fail:
  *
  * preempt must be disabled.
  */
-static int __hot
-select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag,
+static int select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag,
 		int wake_flags, int sibling_count_hint)
 {
 	struct sched_domain *tmp, *sd = NULL;
