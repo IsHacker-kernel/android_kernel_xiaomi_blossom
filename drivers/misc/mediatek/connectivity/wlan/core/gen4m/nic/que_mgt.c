@@ -1918,7 +1918,6 @@ qmDequeueTxPacketsFromGlobalQueue(IN struct ADAPTER *prAdapter,
 					(struct QUE_ENTRY *)
 					prDequeuedPkt);
 				prBurstEndPkt = prDequeuedPkt;
-				prQM->u4DequeueCounter++;
 				u4AvaliableResource -=
 					prDequeuedPkt->u4PageCount;
 				(*prPleCurrentQuota) -=
