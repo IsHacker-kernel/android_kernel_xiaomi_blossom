@@ -1033,11 +1033,6 @@ struct QUE *qmDetermineStaTxQueue(IN struct ADAPTER *prAdapter,
 	}
 
 	*pucTC = ucTC;
-	/*
-	 * Record how many packages enqueue this STA
-	 * to TX during statistic intervals
-	 */
-	prStaRec->u4EnqueueCounter++;
 
 	return prTxQue;
 }
@@ -1699,8 +1694,6 @@ qmDequeueTxPacketsFromPerStaQueues(IN struct ADAPTER *prAdapter,
 				QUEUE_INSERT_TAIL(prQue,
 					(struct QUE_ENTRY *)
 					prDequeuedPkt);
-				prStaRec->u4DeqeueuCounter++;
-				prQM->u4DequeueCounter++;
 
 				u4AvaliableResource -=
 					prDequeuedPkt->u4PageCount;
