@@ -7336,6 +7336,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag,
 			      cpumask_test_cpu(cpu, &p->cpus_allowed);
 	}
 
+sd_loop:
 	rcu_read_lock();
 	for_each_domain(cpu, tmp) {
 		if (!(tmp->flags & SD_LOAD_BALANCE))
