@@ -112,7 +112,6 @@
  *   those tasks through the mainline slow path.
  */
 #define SCHED_FEAT_EAS_PREFER_IDLE 1
-#endif
 
 /*
  * Request max frequency from schedutil whenever a RT task is running.
