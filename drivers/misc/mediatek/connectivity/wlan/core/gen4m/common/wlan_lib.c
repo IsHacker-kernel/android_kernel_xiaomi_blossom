@@ -9926,7 +9926,6 @@ wlanPktTxDone(IN struct ADAPTER *prAdapter,
 	      IN enum ENUM_TX_RESULT_CODE rTxDoneStatus)
 {
 	OS_SYSTIME rCurrent = kalGetTimeTick();
-	struct PKT_PROFILE *prPktProfile = &prMsduInfo->rPktProfile;
 
 	uint8_t *apucPktType[ENUM_PKT_FLAG_NUM] = {
 		(uint8_t *) DISP_STRING("INVALID"),
@@ -9943,34 +9942,6 @@ wlanPktTxDone(IN struct ADAPTER *prAdapter,
 	};
 	if (prMsduInfo->ucPktType >= ENUM_PKT_FLAG_NUM)
 		prMsduInfo->ucPktType = 0;
-
-	if (prPktProfile->fgIsValid &&
-		((prMsduInfo->ucPktType == ENUM_PKT_ARP) ||
-		(prMsduInfo->ucPktType == ENUM_PKT_DHCP))) {
-		if (rCurrent - prPktProfile->rHardXmitArrivalTimestamp > 2000) {
-			DBGLOG(TX, INFO,
-				"valid %d; ArriveDrv %u, Enq %u, Deq %u, LeaveDrv %u, TxDone %u\n",
-				prPktProfile->fgIsValid,
-				prPktProfile->rHardXmitArrivalTimestamp,
-				prPktProfile->rEnqueueTimestamp,
-				prPktProfile->rDequeueTimestamp,
-				prPktProfile->rHifTxDoneTimestamp, rCurrent);
-
-			if (prMsduInfo->ucPktType == ENUM_PKT_ARP)
-				prAdapter->prGlueInfo->fgTxDoneDelayIsARP =
-									TRUE;
-			prAdapter->prGlueInfo->u4ArriveDrvTick =
-				prPktProfile->rHardXmitArrivalTimestamp;
-			prAdapter->prGlueInfo->u4EnQueTick =
-				prPktProfile->rEnqueueTimestamp;
-			prAdapter->prGlueInfo->u4DeQueTick =
-				prPktProfile->rDequeueTimestamp;
-			prAdapter->prGlueInfo->u4LeaveDrvTick =
-				prPktProfile->rHifTxDoneTimestamp;
-			prAdapter->prGlueInfo->u4CurrTick = rCurrent;
-			prAdapter->prGlueInfo->u8CurrTime = sched_clock();
-		}
-	}
 
 	DBGLOG_LIMITED(TX, INFO,
 		"TX DONE, Type[%s] Tag[0x%08x] WIDX:PID[%u:%u] Status[%u], SeqNo: %d\n",
