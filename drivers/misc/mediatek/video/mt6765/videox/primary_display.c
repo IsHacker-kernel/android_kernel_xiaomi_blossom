@@ -594,22 +594,18 @@ static int primary_show_basic_debug_info(struct disp_frame_cfg_t *cfg)
 		&fps);
 	snprintf(disp_tmp, sizeof(disp_tmp), ",rdma_fps:%lld.%02lld,",
 		fps.fps, fps.fps_low);
-	screen_logger_add_message("rdma_fps", MESSAGE_REPLACE, disp_tmp);
-
+	
 	dprec_logger_get_result_value(DPREC_LOGGER_OVL_FRAME_COMPLETE_1SECOND,
 		&fps);
 	snprintf(disp_tmp, sizeof(disp_tmp), "ovl_fps:%lld.%02lld,",
 		fps.fps, fps.fps_low);
-	screen_logger_add_message("ovl_fps", MESSAGE_REPLACE, disp_tmp);
 
 	dprec_logger_get_result_value(DPREC_LOGGER_PQ_TRIGGER_1SECOND, &fps);
 	snprintf(disp_tmp, sizeof(disp_tmp), "PQ_trigger:%lld.%02lld,",
 		fps.fps, fps.fps_low);
-	screen_logger_add_message("PQ trigger", MESSAGE_REPLACE, disp_tmp);
 
 	snprintf(disp_tmp, sizeof(disp_tmp),
 		primary_display_is_video_mode() ? "vdo," : "cmd,");
-	screen_logger_add_message("mode", MESSAGE_REPLACE, disp_tmp);
 
 	for (i = 0; i < cfg->input_layer_num; i++) {
 		if (cfg->input_cfg[i].tgt_offset_y == 0 &&
