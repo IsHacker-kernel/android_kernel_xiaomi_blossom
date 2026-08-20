@@ -574,7 +574,6 @@ int dynamic_debug_msg_print(unsigned int mva, int w, int h, int pitch,
 			       DAL_COLOR_RED);
 		if (ret != MFC_STATUS_OK)
 			goto err1;
-		screen_logger_print(mfc_handle);
 		MFC_Close(mfc_handle);
 err1:
 		m4u_mva_unmap_kernel(real_mva, real_size, kva);
