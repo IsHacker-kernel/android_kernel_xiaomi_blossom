@@ -2906,8 +2906,6 @@ kalQoSFrameClassifierAndPacketInfo(IN struct GLUE_INFO *prGlueInfo,
 		break;
 	}
 
-	STATS_TX_PKT_INFO_DISPLAY(prSkb);
-
 	/* 4 <4.1> Check for PAL (BT over Wi-Fi) */
 	/* Move to kalBowFrameClassifier */
 
