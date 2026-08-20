@@ -2054,8 +2054,6 @@ static int _DL_switch_to_DC_fast(int block)
 	ret = dpmgr_path_config(pgc->dpmgr_handle, data_config_dl,
 		pgc->cmdq_handle_config);
 
-	screen_logger_add_message("sess_mode", MESSAGE_REPLACE,
-		(char *)session_mode_spy(DISP_SESSION_DECOUPLE_MODE));
 	dynamic_debug_msg_print(mva, rdma_config.width, rdma_config.height,
 		rdma_config.pitch, UFMT_GET_Bpp(rdma_config.inputFormat));
 
@@ -6172,7 +6170,6 @@ static int _config_ovl_input(struct disp_frame_cfg_t *cfg,
 		char msg[10];
 
 		snprintf(msg, sizeof(msg), "HRT=%d,", hrt_level);
-		screen_logger_add_message("HRT", MESSAGE_REPLACE, msg);
 	}
 #endif
 
@@ -6285,7 +6282,6 @@ static int _config_ovl_input(struct disp_frame_cfg_t *cfg,
 		char msg[10];
 
 		snprintf(msg, sizeof(msg), "HRT=%d,", hrt_level);
-		screen_logger_add_message("HRT", MESSAGE_REPLACE, msg);
 	}
 #endif
 
