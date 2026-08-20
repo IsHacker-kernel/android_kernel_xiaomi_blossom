@@ -1981,7 +1981,6 @@ void nicRxProcessDataPacket(IN struct ADAPTER *prAdapter,
 		ucBssIndex = secGetBssIdxByWlanIdx(prAdapter,
 						   prSwRfb->ucWlanIdx);
 		GLUE_SET_PKT_BSS_IDX(prSwRfb->pvPacket, ucBssIndex);
-		STATS_RX_PKT_INFO_DISPLAY(prSwRfb);
 
 #if ((CFG_SUPPORT_802_11AX == 1) && (CFG_SUPPORT_WIFI_SYSDVT == 1))
 		if (fgEfuseCtrlAxOn == 1) {
