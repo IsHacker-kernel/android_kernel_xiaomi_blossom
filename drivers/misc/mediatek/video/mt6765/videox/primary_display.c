@@ -6988,8 +6988,6 @@ done:
 	mmprofile_log_ex(ddp_mmp_get_events()->primary_switch_mode,
 			 MMPROFILE_FLAG_PULSE, pgc->session_mode, sess_mode);
 
-	screen_logger_add_message("sess_mode", MESSAGE_REPLACE,
-		(char *)session_mode_spy(sess_mode));
 err:
 	mmprofile_log_ex(ddp_mmp_get_events()->primary_switch_mode,
 			 MMPROFILE_FLAG_END, pgc->session_mode, sess_mode);
