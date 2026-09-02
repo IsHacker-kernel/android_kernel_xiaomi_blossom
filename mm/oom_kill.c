@@ -1129,7 +1129,7 @@ bool out_of_memory(struct oom_control *oc)
 #ifdef CONFIG_PAGE_OWNER
 			print_max_page_owner();
 #endif
-			panic("System is deadlocked on memory\n");
+			pr_err("System is deadlocked on memory\n");
 		}
 	}
 	if (oc->chosen && oc->chosen != (void *)-1UL)
