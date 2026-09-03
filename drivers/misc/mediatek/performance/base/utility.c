@@ -4,6 +4,7 @@
  */
 
 #include <linux/uaccess.h>
+#include <linux/gfp.h>
 #include "mtk_perfmgr_internal.h"
 #ifdef CONFIG_TRACING
 #include <linux/kallsyms.h>
