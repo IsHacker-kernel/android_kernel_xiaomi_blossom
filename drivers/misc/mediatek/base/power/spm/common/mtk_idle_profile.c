@@ -42,6 +42,7 @@ static unsigned long long idle_ratio_profile_start_time;
 #ifndef CONFIG_MTK_ENABLE_GMO
 static unsigned long long idle_block_log_prev_time;
 static unsigned int idle_block_log_time_criteria = 5000;    /* 5 sec */
+#endif
 
 /*External weak functions: implemented in mtk_cpufreq_api.c*/
 #ifndef CONFIG_MTK_ENABLE_GMO
@@ -72,6 +73,7 @@ static struct mtk_idle_buf idle_state_log;
 #define reset_log() reset_idle_buf(idle_log)
 #define get_log() get_idle_buf(idle_log)
 #define append_log(fmt, args...) idle_buf_append(idle_log, fmt, ##args)
+#endif
 
 struct mtk_idle_block {
 #ifndef CONFIG_MTK_ENABLE_GMO
