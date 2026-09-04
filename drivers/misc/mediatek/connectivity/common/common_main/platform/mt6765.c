@@ -1205,7 +1205,6 @@ static INT32 consys_dedicated_log_path_init(struct platform_device *pdev)
 	fw_log_wmt_init();
 #endif
 	return 0;
-#endif
 }
 
 static VOID consys_dedicated_log_path_deinit(VOID)
@@ -1216,6 +1215,7 @@ static VOID consys_dedicated_log_path_deinit(VOID)
 #endif
 #if 0
 	connsys_dedicated_log_path_apsoc_deinit();
+#endif
 #endif
 }
 
