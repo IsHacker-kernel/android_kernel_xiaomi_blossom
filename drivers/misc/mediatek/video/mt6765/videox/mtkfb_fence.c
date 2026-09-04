@@ -1560,8 +1560,8 @@ int disp_sync_get_debug_info(char *stringbuf, int buf_len)
 			"|********Display Session Information********\n");
 
 	for (i = 0; i < ARRAY_SIZE(_disp_fence_context) ; i++) {
-		session_id = _disp_fence_context[i].session_id;
-		session_info = &(_disp_fence_context[i]);
+		session_info = DISP_FENCE_CONTEXT(i);
+		session_id = session_info->session_id;
 		len += scnprintf(stringbuf + len, buf_len - len,
 				"|Session id\t0x%08x\n", session_id);
 		for (l_id = 0; l_id < DISP_SESSION_TIMELINE_COUNT; l_id++) {
