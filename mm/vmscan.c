@@ -206,6 +206,8 @@ static DECLARE_RWSEM(shrinker_rwsem);
 static DEFINE_IDR(shrinker_idr);
 static int shrinker_nr_max;
 
+int hid;
+
 static int prealloc_memcg_shrinker(struct shrinker *shrinker)
 {
 	int id, ret = -ENOMEM;
@@ -6757,7 +6759,7 @@ int kswapd_run(int nid)
 		pgdat->kswapd = NULL;
 	}
 
-	for (int hid = 0; hid < MAX_KCOMPRESSD_THREADS; hid++){
+	for (hid = 0; hid < MAX_KCOMPRESSD_THREADS; hid++){
 		struct kcompressd_data *kcd = kmalloc(sizeof(struct kcompressd_data), GFP_KERNEL);
 		if (!kcd){
 			pr_err("Fail to kmalloc kcompressd data\n");
