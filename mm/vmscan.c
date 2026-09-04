@@ -6791,7 +6791,7 @@ int kswapd_run(int nid)
 	return ret;
 
 	kcompressd_cleanup:
-	for (int hid = 0; hid < MAX_KCOMPRESSD_THREADS; hid++){
+	for (hid = 0; hid < MAX_KCOMPRESSD_THREADS; hid++){
 		if (!IS_ERR_OR_NULL(pgdat->kcompressd[hid])){
 			kthread_stop(pgdat->kcompressd[hid]);
 			pgdat->kcompressd[hid] = NULL;
