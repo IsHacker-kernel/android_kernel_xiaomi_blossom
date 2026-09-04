@@ -459,9 +459,9 @@ static int md_check_header_parser(int md_id, void *parse_addr,
 			md_size_check = true;
 		} else if (head->mem_size < md_size) {
 			md_size_check = true;
-			CCCI_UTIL_WARN_MSG_WITH_ID(md_id,
+			/* CCCI_UTIL_WARN_MSG_WITH_ID(md_id,
 				"[Warning]md size in md header isn't sync to DFO setting: (%08x, %08x)\n",
-				head->mem_size, md_size);
+				head->mem_size, md_size); */
 		}
 		image->img_info.mem_size = head->mem_size;
 		image->ap_info.mem_size = md_size;
