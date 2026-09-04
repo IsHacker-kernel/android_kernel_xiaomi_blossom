@@ -407,7 +407,6 @@ void mtk_idle_dump_cnt_in_interval(void)
 	}
 #endif
 }
-#endif
 
 #ifndef CONFIG_MTK_ENABLE_GMO
 static DEFINE_SPINLOCK(idle_blocking_spin_lock);
