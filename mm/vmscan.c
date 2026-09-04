@@ -6816,7 +6816,7 @@ void kswapd_stop(int nid)
 		pgdat->kswapd = NULL;
 	}
 
-	for (int hid = 0; hid < MAX_KCOMPRESSD_THREADS; hid++){
+	for (hid = 0; hid < MAX_KCOMPRESSD_THREADS; hid++){
 		if (pgdat->kcompressd[hid]) {
 			kthread_stop(pgdat->kcompressd[hid]);
 			pgdat->kcompressd[hid] = NULL;
