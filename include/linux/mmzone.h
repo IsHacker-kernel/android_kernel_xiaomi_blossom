@@ -38,7 +38,7 @@
  */
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
-#define MAX_KCOMPRESSD_THREADS 3
+#define MAX_KCOMPRESSD_THREADS 8
 
 enum migratetype {
 	MIGRATE_UNMOVABLE,
