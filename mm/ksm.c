@@ -39,6 +39,9 @@
 #include <linux/freezer.h>
 #include <linux/oom.h>
 #include <linux/numa.h>
+/* KSM_AUTO START */
+#include <linux/mmzone.h> /* Required for si_mem_available() */
+/* KSM_AUTO END */
 
 #include <asm/tlbflush.h>
 #include "internal.h"
@@ -269,13 +272,27 @@ static unsigned long ksm_stable_node_dups;
 static int ksm_stable_node_chains_prune_millisecs = 2000;
 
 /* Maximum number of page slots sharing a stable node */
-static int ksm_max_page_sharing = 256;
+static int ksm_max_page_sharing = 4096;
 
 /* Number of pages ksmd should scan in one batch */
-static unsigned int ksm_thread_pages_to_scan = 100;
+static unsigned int ksm_thread_pages_to_scan = 8000;
 
 /* Milliseconds ksmd should sleep between batches */
-static unsigned int ksm_thread_sleep_millisecs = 20;
+static unsigned int ksm_thread_sleep_millisecs = 3;
+
+/* KSM_AUTO START */
+/*
+ * Milliseconds ksmd should sleep to poll for memory pressure
+ * when it is currently above the threshold.
+ */
+static unsigned int ksm_memory_poll_millisecs = 3600;
+
+/*
+ * Available memory threshold in KB. If MemAvailable is below this,
+ * ksmd will start scanning. Default is 500 MB.
+ */
+static unsigned long ksm_memory_threshold_kb = 350000;
+/* KSM_AUTO END */
 
 /* Checksum of an empty (zeroed) page */
 static unsigned int zero_checksum __read_mostly;
@@ -2406,28 +2423,61 @@ static int ksmd_should_run(void)
 	return (ksm_run & KSM_RUN_MERGE) && !list_empty(&ksm_mm_head.mm_list);
 }
 
+/* KSM_AUTO START */
+/**
+ * ksm_is_memory_low - Check if available memory is below the threshold.
+ *
+ * This function uses the kernel's internal counter for available memory,
+ * which is what backs /proc/meminfo's MemAvailable field. This is very
+ * efficient.
+ *
+ * Returns true if memory is considered low, false otherwise.
+ */
+static bool ksm_is_memory_low(void)
+{
+	unsigned long available_pages = si_mem_available();
+	unsigned long available_kb = available_pages << (PAGE_SHIFT - 10);
+
+	return available_kb < ksm_memory_threshold_kb;
+}
+/* KSM_AUTO END */
+
 static int ksm_scan_thread(void *nothing)
 {
 	set_freezable();
 	set_user_nice(current, 5);
 
+	/* KSM_AUTO START */
 	while (!kthread_should_stop()) {
 		mutex_lock(&ksm_thread_mutex);
 		wait_while_offlining();
 		if (ksmd_should_run())
-			ksm_do_scan(ksm_thread_pages_to_scan);
+			if (ksm_is_memory_low())
+				ksm_do_scan(ksm_thread_pages_to_scan);
 		mutex_unlock(&ksm_thread_mutex);
 
 		try_to_freeze();
 
 		if (ksmd_should_run()) {
+			unsigned int sleep_ms;
+			/*
+			 * If memory is low, we are actively scanning, so use the
+			 * shorter sleep interval.
+			 * If memory is high, we are just polling, so use the
+			 * longer polling interval to save CPU.
+			 */
+			if (ksm_is_memory_low())
+				sleep_ms = ksm_thread_sleep_millisecs;
+			else
+				sleep_ms = ksm_memory_poll_millisecs;
 			schedule_timeout_interruptible(
-				msecs_to_jiffies(ksm_thread_sleep_millisecs));
+				msecs_to_jiffies(sleep_ms));
 		} else {
 			wait_event_freezable(ksm_thread_wait,
 				ksmd_should_run() || kthread_should_stop());
 		}
 	}
+	/* KSM_AUTO END */
 	return 0;
 }
 
@@ -2846,6 +2896,54 @@ static ssize_t sleep_millisecs_store(struct kobject *kobj,
 }
 KSM_ATTR(sleep_millisecs);
 
+/* KSM_AUTO START */
+static ssize_t memory_poll_millisecs_show(struct kobject *kobj,
+										  struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", ksm_memory_poll_millisecs);
+}
+
+static ssize_t memory_poll_millisecs_store(struct kobject *kobj,
+										   struct kobj_attribute *attr,
+										   const char *buf, size_t count)
+{
+	unsigned long msecs;
+	int err;
+
+	err = kstrtoul(buf, 10, &msecs);
+	if (err || msecs > UINT_MAX)
+		return -EINVAL;
+
+	ksm_memory_poll_millisecs = msecs;
+
+	return count;
+}
+KSM_ATTR(memory_poll_millisecs);
+
+static ssize_t memory_threshold_kb_show(struct kobject *kobj,
+										struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%lu\n", ksm_memory_threshold_kb);
+}
+
+static ssize_t memory_threshold_kb_store(struct kobject *kobj,
+										 struct kobj_attribute *attr,
+										 const char *buf, size_t count)
+{
+	int err;
+	unsigned long kb;
+
+	err = kstrtoul(buf, 10, &kb);
+	if (err)
+		return err;
+
+	ksm_memory_threshold_kb = kb;
+
+	return count;
+}
+KSM_ATTR(memory_threshold_kb);
+/* KSM_AUTO END */
+
 static ssize_t pages_to_scan_show(struct kobject *kobj,
 				  struct kobj_attribute *attr, char *buf)
 {
@@ -3140,6 +3238,10 @@ static struct attribute *ksm_attrs[] = {
 	&stable_node_dups_attr.attr,
 	&stable_node_chains_prune_millisecs_attr.attr,
 	&use_zero_pages_attr.attr,
+	/* KSM_AUTO START */
+	&memory_threshold_kb_attr.attr,
+	&memory_poll_millisecs_attr.attr,
+	/* KSM_AUTO END */
 	NULL,
 };
 
