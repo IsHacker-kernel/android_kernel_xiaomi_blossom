@@ -206,70 +206,6 @@ int clbcct_get_input_curr_limit(void)
 	return chrlmt_chr_input_curr_limit;
 }
 
-static void chrlmt_set_limit_handler(struct work_struct *work)
-{
-
-	mtk_cooler_bcct_dprintk_always("%s %d %d\n", __func__
-						, chrlmt_chr_input_curr_limit,
-						chrlmt_bat_chr_curr_limit);
-
-#ifdef CONFIG_MTK_SWITCH_INPUT_OUTPUT_CURRENT_SUPPORT
-	set_chr_input_current_limit(chrlmt_chr_input_curr_limit);
-#endif
-	set_bat_charging_current_limit(chrlmt_bat_chr_curr_limit);
-}
-
-static int chrlmt_set_limit(
-struct chrlmt_handle *handle, int chr_input_curr_limit, int bat_char_curr_limit)
-{
-	int i;
-	int min_char_input_curr_limit = 0xFFFFFF;
-	int min_bat_char_curr_limit = 0xFFFFFF;
-
-	if (!handle)
-		return -1;
-
-	handle->chr_input_curr_limit = chr_input_curr_limit;
-	handle->bat_chr_curr_limit = bat_char_curr_limit;
-
-	for (i = CHR_LMT_MAX_USER_COUNT; --i >= 0; )
-		if (chrlmt_registered_users[i]) {
-			if (chrlmt_registered_users[i]->chr_input_curr_limit
-			> -1)
-				min_char_input_curr_limit =
-				MIN(
-				chrlmt_registered_users[i]->chr_input_curr_limit
-				, min_char_input_curr_limit);
-
-			if (chrlmt_registered_users[i]->bat_chr_curr_limit
-			> -1)
-				min_bat_char_curr_limit =
-				MIN(
-				chrlmt_registered_users[i]->bat_chr_curr_limit
-				, min_bat_char_curr_limit);
-		}
-
-	if (min_char_input_curr_limit == 0xFFFFFF)
-		min_char_input_curr_limit = -1;
-	if (min_bat_char_curr_limit == 0xFFFFFF)
-		min_bat_char_curr_limit = -1;
-
-	if ((min_char_input_curr_limit != chrlmt_chr_input_curr_limit)
-	|| (min_bat_char_curr_limit != chrlmt_bat_chr_curr_limit)) {
-		chrlmt_chr_input_curr_limit = min_char_input_curr_limit;
-		chrlmt_bat_chr_curr_limit = min_bat_char_curr_limit;
-
-		if (bcct_chrlmt_queue)
-			queue_work(bcct_chrlmt_queue, &bcct_chrlmt_work);
-
-		mtk_cooler_bcct_dprintk_always("%s %p %d %d\n", __func__
-					, handle, chrlmt_chr_input_curr_limit,
-					chrlmt_bat_chr_curr_limit);
-	}
-
-	return 0;
-}
-
 
 static int cl_bcct_klog_on;
 static struct thermal_cooling_device
@@ -366,8 +302,6 @@ static int mtk_cooler_bcct_register_ltf(void)
 	int i;
 
 	mtk_cooler_bcct_dprintk("%s\n", __func__);
-
-	chrlmt_register(&cl_bcct_chrlmt_handle);
 
 #if (MAX_NUM_INSTANCE_MTK_COOLER_BCCT == 3)
 	MTK_CL_BCCT_SET_LIMIT(1000, cl_bcct_state[0]);
@@ -585,15 +519,6 @@ struct thermal_cooling_device *cdev, unsigned long temp)
 			abcct_cur_chr_input_curr_limit = -1;
 	}
 
-	mtk_cooler_bcct_dprintk("%s %ld %ld %ld %ld %ld %d %d\n"
-					, __func__, abcct_curr_temp, pterm,
-					abcct_iterm, dterm, delta,
-					abcct_cur_chr_input_curr_limit,
-					abcct_cur_bat_chr_curr_limit);
-
-	chrlmt_set_limit(&abcct_chrlmt_handle, abcct_cur_chr_input_curr_limit,
-						abcct_cur_bat_chr_curr_limit);
-
 	return 0;
 }
 
@@ -665,7 +590,6 @@ struct thermal_cooling_device *cdev, unsigned long temp)
 		abcct_lcmoff_iterm = 0;
 		abcct_lcmoff_cur_bat_chr_curr_limit =
 					abcct_lcmoff_max_bat_chr_curr_limit;
-		chrlmt_set_limit(&abcct_lcmoff_chrlmt_handle, -1, -1);
 		return 0;
 	}
 
@@ -701,12 +625,6 @@ struct thermal_cooling_device *cdev, unsigned long temp)
 	limit = MIN(abcct_lcmoff_max_bat_chr_curr_limit, limit);
 	limit = MAX(abcct_lcmoff_min_bat_chr_curr_limit, limit);
 	abcct_lcmoff_cur_bat_chr_curr_limit = limit;
-
-	mtk_cooler_bcct_dprintk("%s %ld %ld %ld %ld %ld %d\n"
-				, __func__, abcct_lcmoff_curr_temp, pterm,
-				abcct_lcmoff_iterm, dterm, delta, limit);
-
-	chrlmt_set_limit(&abcct_lcmoff_chrlmt_handle, -1, limit);
 
 	return 0;
 }
@@ -1265,9 +1183,7 @@ static int __init mtk_cooler_bcct_init(void)
 						&_cl_battery_status_fops);
 	}
 
-	bcct_chrlmt_queue = alloc_workqueue("bcct_chrlmt_work",
-			WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_HIGHPRI, 1);
-	INIT_WORK(&bcct_chrlmt_work, chrlmt_set_limit_handler);
+	bcct_chrlmt_queue = NULL;
 
 	return 0;
 
