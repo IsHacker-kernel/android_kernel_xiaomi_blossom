@@ -1639,14 +1639,6 @@ static int charger_pm_event(struct notifier_block *notifier,
 }
 #endif /* CONFIG_PM */
 
-static enum alarmtimer_restart
-	mtk_charger_alarm_timer_func(struct alarm *alarm, ktime_t now)
-{
-	printk("Bypass charger alarm timer");
-
-	return ALARMTIMER_NORESTART;
-}
-
 static void mtk_charger_init_timer(struct mtk_charger *info)
 {
 	printk("Bypass charger alarm timer");
