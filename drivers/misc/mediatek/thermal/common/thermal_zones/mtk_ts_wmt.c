@@ -1435,62 +1435,6 @@ static int wmt_tm_pid_open(struct inode *inode, struct file *file)
 
 #define check_str(x) (x[0] == '\0'?"none\t":x)
 
-static void mtkts_wmt_cancel_thermal_timer(void)
-{
-	struct linux_thermal_ctrl_if *p_linux_if = 0;
-
-	/* wmt_tm_dprintk("[%s]\n", __func__); */
-
-	if (pg_wmt_tm)
-		p_linux_if = &pg_wmt_tm->linux_if;
-	else
-		return;
-
-	/* pr_debug("mtkts_wmt_cancel_thermal_timer\n"); */
-
-	/* stop thermal framework polling when entering deep idle */
-
-	if (down_trylock(&sem_mutex))
-		return;
-
-	if (p_linux_if->thz_dev) {
-		cancel_delayed_work(&(p_linux_if->thz_dev->poll_queue));
-		isTimerCancelled = 1;
-	}
-
-	up(&sem_mutex);
-}
-
-static void mtkts_wmt_start_thermal_timer(void)
-{
-	struct linux_thermal_ctrl_if *p_linux_if = 0;
-
-	/* wmt_tm_dprintk("[%s]\n", __func__); */
-
-	if (pg_wmt_tm)
-		p_linux_if = &pg_wmt_tm->linux_if;
-	else
-		return;
-
-	/* pr_debug("mtkts_wmt_start_thermal_timer\n"); */
-	/* resume thermal framework polling when leaving deep idle */
-
-	if (!isTimerCancelled)
-		return;
-
-
-	if (down_trylock(&sem_mutex))
-		return;
-
-	if (p_linux_if->thz_dev != NULL && p_linux_if->interval != 0) {
-		mod_delayed_work(system_freezable_power_efficient_wq,
-					&(p_linux_if->thz_dev->poll_queue),
-					round_jiffies(msecs_to_jiffies(2000)));
-		isTimerCancelled = 0;
-	}
-	up(&sem_mutex);
-}
-
 static struct thermal_zone_device_ops wmt_thz_dev_ops = {
 	.bind = wmt_thz_bind,
 	.unbind = wmt_thz_unbind,
