@@ -587,16 +587,6 @@ static int tscpu_get_temp
 #else
 	curr_temp = tscpu_get_curr_temp();
 #endif
-	tscpu_dprintk("%s CPU T=%d\n", __func__, curr_temp);
-
-	if ((curr_temp > (trip_temp[0] - 15000))
-	|| (curr_temp < -30000)
-	|| (curr_temp > 85000)) {
-		printk_ratelimited(TSCPU_LOG_TAG " %u %u CPU T=%d\n",
-			apthermolmt_get_cpu_power_limit(),
-			apthermolmt_get_gpu_power_limit(),
-			curr_temp);
-	}
 
 #if ENALBE_SW_FILTER
 	temp_temp = curr_temp;
