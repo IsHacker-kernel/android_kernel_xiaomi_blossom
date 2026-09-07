@@ -603,9 +603,6 @@ static int __init populate_rootfs(void)
 {
 	/* Load the built in initramfs */
 	char *err = unpack_to_rootfs(__initramfs_start, __initramfs_size);
-
-	bool skip_ramdisk;
-
 	if (err)
 		panic("%s", err); /* Failed to decompress INTERNAL initramfs */
 	/* If available load the bootloader supplied initrd */
@@ -615,11 +612,8 @@ static int __init populate_rootfs(void)
 		printk(KERN_INFO "Trying to unpack rootfs image as initramfs...\n");
 		err = unpack_to_rootfs((char *)initrd_start,
 			initrd_end - initrd_start);
-
-		if (!err) {
-			skip_ramdisk = true;
+		if (!err)
 			goto done;
-		}
 
 		clean_rootfs();
 		unpack_to_rootfs(__initramfs_start, __initramfs_size);
@@ -644,10 +638,8 @@ static int __init populate_rootfs(void)
 		printk(KERN_INFO "Unpacking initramfs...\n");
 		err = unpack_to_rootfs((char *)initrd_start,
 			initrd_end - initrd_start);
-		if (err) {
+		if (err)
 			printk(KERN_EMERG "Initramfs unpacking failed: %s\n", err);
-			skip_ramdisk = true;
-		}
 #endif
 	}
 	free_initrd();
@@ -658,6 +650,6 @@ static int __init populate_rootfs(void)
 	 */
 	load_default_modules();
 
-	return skip_ramdisk ? default_rootfs() : 0;
+	return 0;
 }
 rootfs_initcall(populate_rootfs);
