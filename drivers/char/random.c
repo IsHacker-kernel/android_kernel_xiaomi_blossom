@@ -1317,8 +1317,6 @@ static ssize_t __maybe_unused random_read_iter(struct kiocb *kiocb, struct iov_i
 }
 #endif
 
-#endif
-
 static long random_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	int __user *p = (int __user *)arg;
