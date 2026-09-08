@@ -1021,7 +1021,7 @@ config ARCH_HAS_NONLEAF_PMD_YOUNG
 	  may use this capability to reduce their search space.
 
 config ISHACKER_SECURE_KERNEL
-	bool
+	bool "Increase kernel security"
 	select STACKPROTECTOR
 	select STACKPROTECTOR_STRONG
 	select SHADOW_CALL_STACK
