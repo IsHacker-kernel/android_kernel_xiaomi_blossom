@@ -440,7 +440,7 @@ config STACKPROTECTOR
 	bool "Stack Protector buffer overflow detection"
 	depends on HAVE_STACKPROTECTOR
 	depends on $(cc-option,-fstack-protector)
-	default y
+	default n
 	help
 	  This option turns on the "stack-protector" GCC feature. This
 	  feature puts, at the beginning of functions, a canary value on
@@ -464,7 +464,7 @@ config STACKPROTECTOR_STRONG
 	bool "Strong Stack Protector"
 	depends on STACKPROTECTOR
 	depends on $(cc-option,-fstack-protector-strong)
-	default y
+	default n
 	help
 	  Functions will have the stack-protector canary logic added in any
 	  of the following conditions:
@@ -904,7 +904,7 @@ config HAVE_ARCH_VMAP_STACK
 	    instantly rebooting without logging anything would be unfriendly.
 
 config VMAP_STACK
-	default y
+	default n
 	bool "Use a virtually-mapped stack"
 	depends on HAVE_ARCH_VMAP_STACK && !KASAN
 	---help---
@@ -1019,6 +1019,16 @@ config ARCH_HAS_NONLEAF_PMD_YOUNG
 	  accessed bit in non-leaf PMD entries when using them as part of linear
 	  address translations. Page table walkers that clear the accessed bit
 	  may use this capability to reduce their search space.
+
+config ISHACKER_SECURE_KERNEL
+	bool
+	select STACKPROTECTOR
+	select STACKPROTECTOR_STRONG
+	select SHADOW_CALL_STACK
+	select SHADOW_CALL_STACK_VMAP
+	select VMAP_STACK
+	help
+	  Select security-enhancing but performance-heavy options
 
 source "kernel/gcov/Kconfig"
 
