@@ -4140,6 +4140,7 @@ int kswapd_run(int nid)
 					nid, PTR_ERR(pgdat->kcompressd[hid]));
 			goto kcompressd_cleanup;
 		} else {
+			kthread_bind(pgdat->kcompressd[hid], hid + 1);
 			wake_up_process(pgdat->kcompressd[hid]);
 		}
 	}
