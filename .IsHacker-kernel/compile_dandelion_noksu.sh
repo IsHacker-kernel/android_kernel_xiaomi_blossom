@@ -7,7 +7,7 @@ export KERNEL_DEFCONFIG="blossom_defconfig"
 export KERNEL_ARCH="arm64"
 sed -i -e 's/CONFIG_KSU=y/CONFIG_KSU=n/g' arch/${KERNEL_ARCH}/configs/${KERNEL_DEFCONFIG}
 sed -i -e 's/CCONFIG_KSU_MANUAL_HOOK=y/CONFIG_KSU_MANUAL_HOOK=n/g' arch/${KERNEL_ARCH}/configs/${KERNEL_DEFCONFIG}
-git clone https://gitlab.com/LeCmnGend/clang --depth=1 --branch clang-19 /tmp/clang
+git clone https://gitlab.com/clangsantoni/zyc_clang clang --depth=1 --branch 21 /tmp/clang
 export PATH="/tmp/clang/bin:${PATH}"
 clang --version
 export ARCH=${KERNEL_ARCH}
