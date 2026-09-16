@@ -4,7 +4,7 @@
 # To use this script, first move it to ../
 
 export KERNEL_DEFCONFIG="blossom_defconfig"
-git clone https://gitlab.com/LeCmnGend/clang --depth=1 --branch clang-19 /tmp/clang
+git clone https://gitlab.com/clangsantoni/zyc_clang clang --depth=1 --branch 21 /tmp/clang
 export PATH="/tmp/clang/bin:${PATH}"
 clang --version
 chmod u+x clean.sh
