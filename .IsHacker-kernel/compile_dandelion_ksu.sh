@@ -10,6 +10,11 @@ clang --version
 chmod u+x clean.sh
 bash clean.sh
 curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+
+# Don't force CONFIG_KPROBES since we already have manual hooks
+sed -i -e 's/depends on KPROBES && EXT4_FS/depends on EXT4_FS/g' drivers/kernelsu/Kconfig
+sed -i -z -e 's/\n    Requires CONFIG_KPROBES for kernel hooking support.//g' drivers/kernelsu/Kconfig
+
 export KERNEL_ARCH="arm64"
 export ARCH=${KERNEL_ARCH}
 export CROSS_COMPILE="aarch64-linux-gnu-"
