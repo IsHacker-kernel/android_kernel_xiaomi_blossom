@@ -1,0 +1,28 @@
+diff --git a/drivers/kernelsu/Kconfig b/drivers/kernelsu/Kconfig
+index 88e22811..1c62baf6 100644
+--- a/drivers/kernelsu/Kconfig
++++ b/kernel/Kconfig
+@@ -2,11 +2,10 @@ menu "KernelSU"
+ 
+ config KSU
+ 	tristate "KernelSU function support"
+-	depends on KPROBES && EXT4_FS
++	depends on EXT4_FS
+ 	default y
+ 	help
+ 	  Enable kernel-level root privileges on Android System.
+-	  Requires CONFIG_KPROBES for kernel hooking support.
+ 	  Requires CONFIG_EXT4_FS for `ext4_unregister_sysfs`.
+ 	  To compile as a module, choose M here: the
+ 	  module will be called kernelsu.
+diff --git a/drivers/kernelsu/core/init.c b/drivers/kernelsu/core/init.c
+index e9cd1023..996e54c7 100644
+--- a/drivers/kernelsu/core/init.c
++++ b/drivers/kernelsu/core/init.c
+@@ -228,6 +228,4 @@ MODULE_AUTHOR("weishu");
+ MODULE_DESCRIPTION("Android KernelSU");
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ MODULE_IMPORT_NS("VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+-#else
+-MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
+ #endif
