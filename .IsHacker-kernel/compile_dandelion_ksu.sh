@@ -7,12 +7,16 @@ export KERNEL_DEFCONFIG="blossom_defconfig"
 git clone https://gitlab.com/clangsantoni/zyc_clang clang --depth=1 --branch 21 /tmp/clang
 export PATH="/tmp/clang/bin:${PATH}"
 clang --version
-chmod u+x clean.sh
-bash clean.sh
+
+# Stalled
+# chmod u+x clean.sh
+# bash clean.sh
+
 curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
 
+# Stalled
 # Fix CONFIG_KPROBES dependency and several other problems with KSU
-patch -p1 -i ksu_blossom.patch
+# patch -p1 -i ksu_blossom.patch
 
 export KERNEL_ARCH="arm64"
 export ARCH=${KERNEL_ARCH}
