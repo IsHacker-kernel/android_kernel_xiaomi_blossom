@@ -26,6 +26,152 @@ index e9cd1023..996e54c7 100644
 -#else
 -MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
  #endif
+diff --git a/drivers/kernelsu/feature/selinux_hide.c b/drivers/kernelsu/feature/selinux_hide.c
+index fbb6c44f..921d0b19 100644
+--- a/drivers/kernelsu/feature/selinux_hide.c
++++ b/drivers/kernelsu/feature/selinux_hide.c
+@@ -27,7 +27,11 @@
+ #include "hook/patch_memory.h"
+ #include "ksu.h"
+ #include "policy/feature.h"
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+ #include "hook/lsm_hook.h"
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 2, 0)
++#include <linux/lsm_hooks.h>
++#endif
+ 
+ static DEFINE_MUTEX(selinux_hide_mutex);
+ static bool ksu_selinux_hide_enabled __read_mostly = false;
+@@ -57,6 +61,8 @@ enum sel_inos {
+     SEL_INO_NEXT, /* The next inode number to use */
+ };
+ 
++static struct mutex *ksu_selinux_status_lock = NULL;
++
+ typedef ssize_t (*write_op_fn)(struct file *, char *, size_t);
+ 
+ static write_op_fn *selinux_write_op;
+@@ -249,15 +255,27 @@ static struct page *fake_status = NULL;
+ 
+ static void initialize_fake_status()
+ {
+-    mutex_lock(&selinux_state.status_lock);
++#if LINUX_VERSION_CODE > KERNEL_VERSION(5, 7, 0)
++    ksu_selinux_status_lock = &selinux_state.status_lock;
++#else
++    ksu_selinux_status_lock = &selinux_state.ss->status_lock;
++#endif
++    mutex_lock(ksu_selinux_status_lock);
++
+     if (fake_status)
+         goto out;
+-    if (!selinux_state.status_page) {
++
++#if LINUX_VERSION_CODE > KERNEL_VERSION(5, 7, 0)
++    struct page *selinux_status_page = selinux_state.status_page;
++#else
++    struct page *selinux_status_page = selinux_state.ss->status_page;
++#endif
++    if (!selinux_status_page) {
+         pr_warn("initialize_fake_status: status_page not exist\n");
+         goto out;
+     }
+ 
+-    struct selinux_kernel_status *status = page_address(selinux_state.status_page);
++    struct selinux_kernel_status *status = page_address(selinux_status_page);
+     if (!status->enforcing && !ksu_late_loaded) {
+         pr_warn("initialize_fake_status: skip not enforcing\n");
+         goto out;
+@@ -293,7 +311,7 @@ static void initialize_fake_status()
+             new_status->policyload, new_status->enforcing);
+ 
+ out:
+-    mutex_unlock(&selinux_state.status_lock);
++    mutex_unlock(ksu_selinux_status_lock);
+ }
+ 
+ typedef int (*sel_open_handle_status_fn)(struct inode *inode, struct file *filp);
+@@ -302,9 +320,9 @@ static int my_sel_open_handle_status(struct inode *inode, struct file *filp)
+ {
+     if (likely(current_uid().val >= 10000 && ksu_selinux_hide_enabled)) {
+         void *data;
+-        mutex_lock(&selinux_state.status_lock);
++        mutex_lock(ksu_selinux_status_lock);
+         data = fake_status;
+-        mutex_unlock(&selinux_state.status_lock);
++        mutex_unlock(ksu_selinux_status_lock);
+         if (data) {
+             filp->private_data = data;
+             return 0;
+@@ -345,8 +363,29 @@ static int ksu_selinux_hide_enable()
+         pr_warn("context_struct_compute_av not found!\n");
+     }
+ #else
+-    fake_state.initialized = true;
++	fake_state.initialized = true;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+     fake_state.policy = backup_sepolicy;
++#else
++     fake_state.ss = kzalloc(sizeof(*fake_state.ss), GFP_KERNEL);
++     if (!fake_state.ss) {
++         pr_err("selinux_hide: failed alloc selinux_ss!\n");
++         return -ENOMEM;
++     }
++
++     rwlock_init(&fake_state.ss->policy_rwlock);
++
++     // In normal android
++     // Only set selinux policy once
++     // So let's just hardcode to 1 to avoid avdSeqNo detect
++     //
++     // We manually reset latest_granting to 1, or will cause we may put an abnormal latest_granting to avdSeqNoeqNo
++     // Because there will be called in any time, and i am too lazy move it to before apply_kernelsu_rules :)
++     fake_state.ss->latest_granting = 1;
++
++     // Replace policydb/sidtab with ourselves
++     memcpy(&fake_state.ss->policydb, backup_policydb, sizeof(struct policydb));
++#endif
+ #endif
+ 
+     context_write = &selinux_write_op[SEL_CONTEXT];
+@@ -517,16 +556,17 @@ void __exit ksu_selinux_hide_exit()
+     }
+     mutex_unlock(&selinux_hide_mutex);
+     ksu_unregister_feature_handler(KSU_FEATURE_SELINUX_HIDE);
+-    mutex_lock(&selinux_state.status_lock);
++    mutex_lock(ksu_selinux_status_lock);
+     if (fake_status)
+         __free_page(fake_status);
+     fake_status = NULL;
+-    mutex_unlock(&selinux_state.status_lock);
++    mutex_unlock(ksu_selinux_status_lock);
+ }
+ 
+ void ksu_selinux_hide_drop_backup_if_unused()
+ {
+     mutex_lock(&selinux_hide_mutex);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+     if (!ksu_selinux_hide_running && backup_sepolicy) {
+         pr_info("selinux_hide is not enabled - drop backup_sepolicy\n");
+         sidtab_destroy(backup_sepolicy->sidtab);
+@@ -534,6 +574,17 @@ void ksu_selinux_hide_drop_backup_if_unused()
+         ksu_destroy_sepolicy(backup_sepolicy);
+         backup_sepolicy = NULL;
+     }
++#else
++    if (!ksu_selinux_hide_running && backup_policydb && backup_sidtab) {
++        pr_info("selinux_hide is not enabled - drop backup_policydb\n");
++        sidtab_destroy(backup_sidtab);
++        kfree(backup_sidtab);
++        ksu_destroy_policydb(backup_policydb);
++        kfree(backup_policydb);
++        backup_policydb = NULL;
++        backup_sidtab = NULL;
++    }
++#endif
+     mutex_unlock(&selinux_hide_mutex);
+ }
+ 
 diff --git a/drivers/kernelsu/feature/sucompat.c b/drivers/kernelsu/feature/sucompat.c
 index 1ba7b58e..f7edfb69 100644
 --- a/drivers/kernelsu/feature/sucompat.c
@@ -1021,10 +1167,14 @@ index e2115a1b..e061cea9 100644
  }
 +#endif
 diff --git a/drivers/kernelsu/selinux/sepolicy.h b/drivers/kernelsu/selinux/sepolicy.h
-index ed85b93d..b814b6ec 100644
+index ed85b93d..9f793fa9 100644
 --- a/drivers/kernelsu/selinux/sepolicy.h
 +++ b/drivers/kernelsu/selinux/sepolicy.h
-@@ -5,9 +5,14 @@
+@@ -2,12 +2,18 @@
+ #define __KSU_H_SEPOLICY
+ 
+ #include <linux/types.h>
++#include <linux/version.h>
  
  #include "ss/policydb.h"
  
@@ -1064,3 +1214,37 @@ index 51d6fa84..2a2e7eca 100644
  #if defined(__x86_64__) && LINUX_VERSION_CODE < KERNEL_VERSION(6, 2, 0)
  #include <linux/mm.h>
  #endif
+diff --git a/drivers/kernelsu/supercall/dispatch.c b/drivers/kernelsu/supercall/dispatch.c
+index 68c333f1..a9302ff5 100644
+--- a/drivers/kernelsu/supercall/dispatch.c
++++ b/drivers/kernelsu/supercall/dispatch.c
+@@ -4,6 +4,8 @@
+ #include <linux/uaccess.h>
+ #include <linux/version.h>
+ #include <linux/thread_info.h>
++#include <linux/sched/task.h>
++#include <linux/init_task.h>
+ #include "uapi/supercall.h"
+ #include "supercall/internal.h"
+ #include "arch.h" // IWYU pragma: keep
+diff --git a/drivers/kernelsu/supercall/supercall.c b/drivers/kernelsu/supercall/supercall.c
+index 3dfd4abf..7a3db644 100644
+--- a/drivers/kernelsu/supercall/supercall.c
++++ b/drivers/kernelsu/supercall/supercall.c
+@@ -17,6 +17,16 @@
+ #include "util.h"
+ #include "klog.h" // IWYU pragma: keep
+ 
++// Linux >= 5.7
++// task_work_add (struct, struct, enum)
++// Linux pre-5.7
++// task_work_add (struct, struct, bool)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0)
++#ifndef TWA_RESUME
++#define TWA_RESUME true
++#endif
++#endif
++
+ struct ksu_install_fd_tw {
+     struct callback_head cb;
+     int __user *outp;
