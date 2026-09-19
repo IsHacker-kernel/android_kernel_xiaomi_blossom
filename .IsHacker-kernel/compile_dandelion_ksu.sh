@@ -13,6 +13,7 @@ chmod u+x clean.sh
 bash clean.sh
 
 curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/refs/heads/master/kernel/setup.sh" | bash -
+mv drivers/android/dummy_lmk.c drivers/android/lowmemorykiller.c
 
 export KERNEL_ARCH="arm64"
 export ARCH=${KERNEL_ARCH}
