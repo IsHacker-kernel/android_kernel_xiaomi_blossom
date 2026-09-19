@@ -81,10 +81,5 @@ config ANDROID_BINDER_LOGS
 
 	  Say N on production builds.
 
-config ANDROID_DUMMY_LMK
-	bool "Low Memory Killer dummy"
-	help
-	  Enable low memory killer dummy which disables Android's userspace lmkd by spoofing in-kernel LMK driver.
-
 endif # if ANDROID
 endmenu
