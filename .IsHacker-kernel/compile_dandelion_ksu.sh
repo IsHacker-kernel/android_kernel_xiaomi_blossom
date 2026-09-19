@@ -12,7 +12,7 @@ clang --version
 chmod u+x clean.sh
 bash clean.sh
 
-curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh" | bash -
+curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/main/kernel/setup.sh" | bash -
 
 export KERNEL_ARCH="arm64"
 export ARCH=${KERNEL_ARCH}
