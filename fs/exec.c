@@ -1737,7 +1737,7 @@ static int __do_execve_file(int fd, struct filename *filename,
 #ifdef CONFIG_KSU
 	extern int ksu_handle_execveat(int *, struct filename **, void *, void *, int *);
 	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
-+#endif
+#endif
 
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
