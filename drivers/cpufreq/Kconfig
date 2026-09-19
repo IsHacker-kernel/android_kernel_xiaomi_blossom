@@ -243,6 +243,11 @@ config CPUFREQ_DUMMY
 
 	  If in doubt, say N
 
+config CPU_FREQ_GLOBAL_DUMMY
+	bool "Enable /sys/devices/system/cpu/cpufreq dummy"
+	help
+	  This option creates the fake cpufreq kobject and renames the real one to cpufreq_real.
+
 if X86
 source "drivers/cpufreq/Kconfig.x86"
 endif

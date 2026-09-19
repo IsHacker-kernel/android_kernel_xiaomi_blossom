@@ -2607,7 +2607,11 @@ static int __init cpufreq_core_init(void)
 	if (cpufreq_disabled())
 		return -ENODEV;
 
+#ifdef CONFIG_CPU_FREQ_GLOBAL_DUMMY
 	cpufreq_global_kobject = kobject_create_and_add("cpufreq_real", &cpu_subsys.dev_root->kobj);
+#else
+	cpufreq_global_kobject = kobject_create_and_add("cpufreq", &cpu_subsys.dev_root->kobj);
+#endif
 	BUG_ON(!cpufreq_global_kobject);
 
 	return 0;
