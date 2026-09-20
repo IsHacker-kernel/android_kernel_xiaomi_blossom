@@ -454,8 +454,7 @@ KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS_MODULE := -DMODULE
 KBUILD_CFLAGS_MODULE := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
-KBUILD_LDFLAGS := -O3 -mcpu=cortex-a53+crc -mtune=cortex-a53
-KBUILD_CFLAGS := -mcpu=cortex-a53+crc -mtune=cortex-a53
+KBUILD_LDFLAGS :=
 GCC_PLUGINS_CFLAGS :=
 CLANG_FLAGS :=
 TARGET_BUILD_VARIANT := user
@@ -700,7 +699,7 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
-OPT_FLAGS	:= -O3 -march=armv8-a+crc+crypto
+OPT_FLAGS	:= -O2 -march=armv8-a+crc+crypto
 OPT_FLAGS	+= -mtune=cortex-a53
 endif
 
