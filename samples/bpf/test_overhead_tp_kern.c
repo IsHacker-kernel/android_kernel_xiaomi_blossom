@@ -13,7 +13,7 @@ struct task_rename {
 	__u32 pid;
 	char oldcomm[16];
 	char newcomm[16];
-	__u16 oom_score_adj_n;
+	__u16 oom_score_adj;
 };
 SEC("tracepoint/task/task_rename")
 int prog(struct task_rename *ctx)
