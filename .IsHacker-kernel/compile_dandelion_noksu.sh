@@ -17,4 +17,4 @@ export CROSS_COMPILE="/tmp/clang/bin/aarch64-linux-gnu-"
 export CC="clang"
 export CLANG_TRIPLE="/tmp/clang/bin/aarch64-linux-gnu-"
 make O=out CC=clang ARCH=${ARCH} ${KERNEL_DEFCONFIG}
-make -j$(nproc) KCFLAGS="-Wno-error=implicit-function-declaration -O3 -march=armv8-a+crc+crypto -mcpu=cortex-a53+crypto+crc+fp+simd -mtune=cortex-a53" O=out ARCH=${ARCH} CC=clang CLANG_TRIPLE=${CLANG_TRIPLE} CROSS_COMPILE=${CROSS_COMPILE} LD=ld.lld NM=llvm-nm AR=llvm-ar
+make -j$(nproc) KCFLAGS="-Wno-error=implicit-function-declaration -O3 -march=armv8-a+crc+crypto -mcpu=cortex-a53+crypto+crc+fp+simd -mtune=cortex-a53" O=out ARCH=${ARCH} CC=clang CLANG_TRIPLE=${CLANG_TRIPLE} CROSS_COMPILE=${CROSS_COMPILE} LD=ld.lld NM=llvm-nm AR=llvm-ar OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
