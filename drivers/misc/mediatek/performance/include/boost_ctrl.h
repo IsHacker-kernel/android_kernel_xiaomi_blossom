@@ -18,6 +18,7 @@ int dram_ctrl_init(struct proc_dir_entry *parent);
 
 /*eas controller*/
 int uclamp_ctrl_init(struct proc_dir_entry *parent);
+int dummy_uclamp_ctrl_init(struct proc_dir_entry *parent);
 int eas_ctrl_init(struct proc_dir_entry *parent);
 
 /*topology controller*/
