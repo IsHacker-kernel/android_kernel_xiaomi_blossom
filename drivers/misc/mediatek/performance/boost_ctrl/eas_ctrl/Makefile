@@ -20,3 +20,4 @@ ccflags-y += \
 	-I$(srctree)/drivers/misc/mediatek/performance/boost_ctrl/include/
 
 obj-y += eas_ctrl.o uclamp_ctrl.o
+obj-$(CONFIG_EAS_CTRL_UCLAMP_DUMMY) += eas_ctrl_dummy.o

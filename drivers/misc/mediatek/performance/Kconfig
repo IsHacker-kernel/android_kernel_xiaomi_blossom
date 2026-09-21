@@ -59,3 +59,8 @@ config MTK_EARA_THERMAL
 	  EARA_THERMAL persuades FPS performance when thermal throttling.
 	  This function depends on MTK_FPSGO_V3.
 	  If you are not sure about this, please set n.
+
+config EAS_CTRL_UCLAMP_DUMMY
+	bool "Enable uclamp dummy procfs entries"
+	help
+	  This option creates dummy uclamp entries under /proc/perfmgr/boost_ctrl/eas_ctrl when CONFIG_MTK_SCHED_EXTENSION is disabled.
