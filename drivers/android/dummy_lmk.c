@@ -6,15 +6,21 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 
+#ifndef CONFIG_PSI
 static const char *minfree = "0,0,0,0,0,0";
 static const int adj = 1001;
 
 module_param(minfree, charp, 0444);
 module_param(adj, int, 0444);
+#endif
 
 
 static int __init dummy_lmk_init(void)
 {
+#ifdef CONFIG_PSI
+	pr_err("dummy_lmk: Disabling. Please disable CONFIG_PSI first!\n");
+	pr_err("dummy_lmk: Userspace lmkd is now active.\n");
+#endif
 	return 0;
 }
 
