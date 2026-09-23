@@ -351,6 +351,15 @@ endmenu # Other Peripheral
 
 menu "Memory"
 
+config EXTREME_LOW_RAM
+	bool "Default disable GPU/CCCI debug mechanism"
+	default n
+	help
+	  Provide config to remove CPU/MD debug mechanism for memory slim.
+	  This is a group kernel setting of GMO mechanism,
+	  Select "y" separately is not suggested.
+	  Select "n" by default.
+
 config MTK_GMO_RAM_OPTIMIZE
 	bool "MTK RAM Optimize"
 	select MTK_ENABLE_GMO
