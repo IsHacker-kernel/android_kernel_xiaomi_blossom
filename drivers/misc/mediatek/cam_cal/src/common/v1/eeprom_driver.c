@@ -360,7 +360,7 @@ struct i2c_driver EEPROM_HW_i2c_driver4 = {
 	.probe = EEPROM_HW_i2c_probe4,
 	.remove = EEPROM_HW_i2c_remove4,
 	.driver = {
-		.name = CAM_CAL_DRV_NAME,
+		.name = CAM_CAL_I2C_DEV4_NAME,
 		.owner = THIS_MODULE,
 
 #ifdef CONFIG_OF
