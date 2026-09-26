@@ -647,6 +647,7 @@ GED_ERROR ged_hal_init(void)
 	return err;
 
 	mtk_custom_boost_gpu_freq(0);
+	mtk_custom_upbound_gpu_freq(0);
 
 ERROR:
 
