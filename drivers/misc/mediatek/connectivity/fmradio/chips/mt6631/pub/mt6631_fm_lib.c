@@ -1480,96 +1480,6 @@ static bool mt6631_Seek(unsigned short min_freq, unsigned short max_freq, unsign
 #endif
 #define FM_CQI_LOG_PATH "/mnt/sdcard/fmcqilog"
 
-static signed int mt6631_full_cqi_get(signed int min_freq, signed int max_freq, signed int space, signed int cnt)
-{
-	signed int ret = 0;
-	unsigned short pkt_size;
-	unsigned short freq, orig_freq;
-	signed int i, j, k;
-	signed int space_val, max, min, num;
-	struct mt6631_full_cqi *p_cqi;
-	unsigned char *cqi_log_title = "Freq, RSSI, PAMD, PR, FPAMD, MR, ATDC, PRX, ATDEV, SMGain, DltaRSSI\n";
-	unsigned char cqi_log_buf[100] = { 0 };
-	signed int pos;
-	unsigned char cqi_log_path[100] = { 0 };
-
-	/* for soft-mute tune, and get cqi */
-	freq = fm_cb_op->cur_freq_get();
-	if (fm_get_channel_space(freq) == 0)
-		freq *= 10;
-
-	/* get cqi */
-	orig_freq = freq;
-	if (fm_get_channel_space(min_freq) == 0)
-		min = min_freq * 10;
-	else
-		min = min_freq;
-
-	if (fm_get_channel_space(max_freq) == 0)
-		max = max_freq * 10;
-	else
-		max = max_freq;
-
-	if (space == 0x0001)
-		space_val = 5;	/* 50Khz */
-	else if (space == 0x0002)
-		space_val = 10;	/* 100Khz */
-	else if (space == 0x0004)
-		space_val = 20;	/* 200Khz */
-	else
-		space_val = 10;
-
-	num = (max - min) / space_val + 1;	/* Eg, (8760 - 8750) / 10 + 1 = 2 */
-	for (k = 0; (orig_freq == 10000) && (g_dbg_level == 0xffffffff) && (k < cnt); k++) {
-		WCN_DBG(FM_NTC | CHIP, "cqi file:%d\n", k + 1);
-		freq = min;
-		pos = 0;
-		fm_memcpy(cqi_log_path, FM_CQI_LOG_PATH, strlen(FM_CQI_LOG_PATH));
-		if (sprintf(&cqi_log_path[strlen(FM_CQI_LOG_PATH)], "%d.txt", k + 1) < 0)
-			WCN_DBG(FM_NTC | CHIP, "sprintf fail\n");
-		fm_file_write(cqi_log_path, cqi_log_title, strlen(cqi_log_title), &pos);
-		for (j = 0; j < num; j++) {
-			if (FM_LOCK(cmd_buf_lock))
-				return -FM_ELOCK;
-			pkt_size = fm_full_cqi_req(cmd_buf, TX_BUF_SIZE, &freq, 1, 1);
-			ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_SM_TUNE, SW_RETRY_CNT,
-					SM_TUNE_TIMEOUT, fm_get_read_result);
-			FM_UNLOCK(cmd_buf_lock);
-
-			if (!ret && fm_res) {
-				WCN_DBG(FM_NTC | CHIP, "smt cqi size %d\n", fm_res->cqi[0]);
-				p_cqi = (struct mt6631_full_cqi *)&fm_res->cqi[2];
-				for (i = 0; i < fm_res->cqi[1]; i++) {
-					/* just for debug */
-					WCN_DBG(FM_NTC | CHIP,
-						"freq %d, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x\n",
-						p_cqi[i].ch, p_cqi[i].rssi, p_cqi[i].pamd,
-						p_cqi[i].pr, p_cqi[i].fpamd, p_cqi[i].mr,
-						p_cqi[i].atdc, p_cqi[i].prx, p_cqi[i].atdev,
-						p_cqi[i].smg, p_cqi[i].drssi);
-					/* format to buffer */
-					if (sprintf(cqi_log_buf,
-							"%04d, %04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x, %04x,\n",
-							p_cqi[i].ch, p_cqi[i].rssi, p_cqi[i].pamd,
-							p_cqi[i].pr, p_cqi[i].fpamd, p_cqi[i].mr,
-							p_cqi[i].atdc, p_cqi[i].prx, p_cqi[i].atdev,
-							p_cqi[i].smg, p_cqi[i].drssi) < 0)
-						WCN_DBG(FM_NTC | CHIP, "sprintf fail\n");
-					/* write back to log file */
-					fm_file_write(cqi_log_path, cqi_log_buf, strlen(cqi_log_buf), &pos);
-				}
-			} else {
-				WCN_DBG(FM_ALT | CHIP, "smt get CQI failed\n");
-				ret = -1;
-			}
-			freq += space_val;
-		}
-		fm_cb_op->cur_freq_set(0);	/* avoid run too much times */
-	}
-
-	return ret;
-}
-
 static unsigned short mt6631_read_dsp_reg(unsigned short addr)
 {
 	unsigned short regValue = 0;
@@ -2021,7 +1931,6 @@ signed int mt6631_fm_low_ops_register(struct fm_callback *cb, struct fm_basic_in
 	bi->is_dese_chan = mt6631_is_dese_chan;
 	bi->softmute_tune = mt6631_soft_mute_tune;
 	bi->desense_check = mt6631_desense_check;
-	bi->cqi_log = mt6631_full_cqi_get;
 	bi->pre_search = mt6631_pre_search;
 	bi->restore_search = mt6631_restore_search;
 	bi->set_search_th = mt6631_set_search_th;
