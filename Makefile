@@ -699,12 +699,22 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
-OPT_FLAGS	:= -O2 -march=armv8-a+crc+crypto
+OPT_FLAGS	:= -O3 -march=armv8-a+crc+crypto
 OPT_FLAGS	+= -mtune=cortex-a53
 endif
 
+#Enable MLGO
+#ifeq ($(shell test $(CONFIG_CLANG_VERSION) -gt 180000; echo $$?),0)
+#KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release
+#KBUILD_CFLAGS   += -mllvm -enable-machine-outliner
+#KBUILD_LDFLAGS  += -mllvm -regalloc-enable-advisor=release
+#KBUILD_LDFLAGS  += -mllvm -enable-ml-inliner=release
+#KBUILD_LDFLAGS  += -mllvm -enable-machine-outliner
+#endif
+
 # Enable fast FMA optimizations
 KBUILD_CFLAGS += -ffp-contract=fast
+
 # Enable hot cold split optimization
 KBUILD_CFLAGS += -mllvm -hot-cold-split=true
 
