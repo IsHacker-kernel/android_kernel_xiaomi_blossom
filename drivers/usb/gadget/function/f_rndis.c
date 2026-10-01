@@ -535,6 +535,7 @@ static void rndis_command_complete(struct usb_ep *ep, struct usb_request *req)
 		pr_err("RNDIS command error %d, %d/%d\n",
 			status, req->actual, req->length);
 	buf = (rndis_init_msg_type *)req->buf;
+	buf->MaxTransferSize = RNDIS_MAX_TRANSFER_SIZE;
 	if (buf->MessageType == RNDIS_MSG_INIT) {
 		if (buf->MaxTransferSize > 2048) {
 			rndis->port.multi_pkt_xfer = 1;

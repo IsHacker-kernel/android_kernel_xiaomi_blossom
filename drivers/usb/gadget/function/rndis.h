@@ -18,6 +18,7 @@
 
 #define RNDIS_MAXIMUM_FRAME_SIZE	1518
 #define RNDIS_MAX_TOTAL_SIZE		1558
+#define RNDIS_MAX_TRANSFER_SIZE		16384
 
 typedef struct rndis_init_msg_type {
 	__le32	MessageType;
