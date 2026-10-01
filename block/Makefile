@@ -3,8 +3,8 @@
 # Makefile for the kernel block layer
 #
 
-ccflags-y += -flto=thin
-subdir-ccflags-y += -flto=thin
+ccflags-y += -flto
+subdir-ccflags-y += -flto
 
 obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-tag.o blk-sysfs.o \
 			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
