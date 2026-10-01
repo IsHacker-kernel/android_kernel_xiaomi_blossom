@@ -4,7 +4,7 @@
 # To use this script, first move it to ../
 
 export KERNEL_DEFCONFIG="blossom_defconfig"
-git clone https://gitlab.com/clangsantoni/zyc_clang clang --depth=1 --branch 21 /tmp/clang
+git clone https://gitlab.com/clangsantoni/zyc_clang --depth=1 --branch 21 /tmp/clang
 git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 /tmp/aosp-clang
 export PATH="/tmp/aosp-clang/clang-r614150/bin:${PATH}"
 clang --version
@@ -21,4 +21,4 @@ export CROSS_COMPILE="/tmp/clang/bin/aarch64-linux-gnu-"
 export CC="clang"
 export CLANG_TRIPLE="/tmp/clang/bin/aarch64-linux-gnu-"
 make O=out CC=clang ARCH=${ARCH} ${KERNEL_DEFCONFIG}
-make -j$(nproc) KCFLAGS="-Wno-error=implicit-function-declaration -O3 -march=armv8-a+crc+crypto -mcpu=cortex-a53+crypto+crc+fp+simd -mtune=cortex-a53" O=out ARCH=${ARCH} CC=clang CLANG_TRIPLE=${CLANG_TRIPLE} CROSS_COMPILE=${CROSS_COMPILE} LD=ld.lld NM=llvm-nm AR=llvm-ar OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+make -j$(nproc) KCFLAGS="-Wno-error=implicit-function-declaration -O3 -march=armv8-a+crc+crypto -mcpu=cortex-a53+crypto+crc+fp+simd -mtune=cortex-a53 -fno-semantic-interposition -fno-signed-zeros -ffinite-math-only -freciprocal-math -fcf-protection=none -fno-trapping-math -fno-math-errno -ffast-math -funroll-loops" O=out ARCH=${ARCH} CC=clang CLANG_TRIPLE=${CLANG_TRIPLE} CROSS_COMPILE=${CROSS_COMPILE} LD=ld.lld NM=llvm-nm AR=llvm-ar OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
