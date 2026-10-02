@@ -703,7 +703,6 @@ OPT_FLAGS	:= -O3 -march=armv8-a+crc+crypto
 OPT_FLAGS	+= -mtune=cortex-a53
 endif
 
-<<<<<<< HEAD
 #Enable MLGO
 #ifeq ($(shell test $(CONFIG_CLANG_VERSION) -gt 180000; echo $$?),0)
 #KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release
