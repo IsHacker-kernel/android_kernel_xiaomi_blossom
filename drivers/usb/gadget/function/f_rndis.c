@@ -79,6 +79,10 @@ static unsigned int f_rndis_debug;
 module_param(f_rndis_debug, uint, 0644);
 MODULE_PARM_DESC(f_rndis_debug,
 		"f_rndis debug flag");
+static unsigned int rndis_max_transfer_size = RNDIS_MAX_TRANSFER_SIZE;
+module_param(rndis_max_transfer_size, uint, 0644);
+MODULE_PARM_DESC(rndis_max_transfer_size,
+	"Maximum transfer size per buffer");
 #define F_RNDIS_DBG(fmt, args...) \
 	pr_notice("F_RNDIS,%s, " fmt, __func__, ## args)
 static struct f_rndis *_rndis;
@@ -535,7 +539,7 @@ static void rndis_command_complete(struct usb_ep *ep, struct usb_request *req)
 		pr_err("RNDIS command error %d, %d/%d\n",
 			status, req->actual, req->length);
 	buf = (rndis_init_msg_type *)req->buf;
-	buf->MaxTransferSize = RNDIS_MAX_TRANSFER_SIZE;
+	buf->MaxTransferSize = rndis_max_transfer_size;
 	if (buf->MessageType == RNDIS_MSG_INIT) {
 		if (buf->MaxTransferSize > 2048) {
 			rndis->port.multi_pkt_xfer = 1;
