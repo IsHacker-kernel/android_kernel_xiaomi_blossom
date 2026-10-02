@@ -730,7 +730,7 @@ POLLY_FLAGS	+= -mllvm -polly \
 		   -mllvm -polly-ast-use-context \
 		   -mllvm -polly-detect-keep-going \
 		   -mllvm -polly-invariant-load-hoisting \
-		   -mllvm -polly-opt-fusion=max \
+		   -mllvm -polly-loopfusion-greedy \
 		   -mllvm -polly-run-inliner \
 		   -mllvm -polly-vectorizer=stripmine
 # Polly may optimize loops with dead paths beyound what the linker
