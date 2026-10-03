@@ -93,8 +93,6 @@ const char *BannedApps[] =
 	"com.google.android.gms:persistent",
 	"thermalloadalgod",
 	"com.android.adservices.api",
-	"statsd",
-	"com.android.os.statsd",
 	"ged_dump_fw_log",
 	"ipsec_mon",
 	".xmsf",
