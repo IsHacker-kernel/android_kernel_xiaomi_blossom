@@ -41,6 +41,7 @@
 #include <linux/kthread.h>
 #include <linux/init.h>
 #include <linux/mmu_notifier.h>
+#include <linux/fs.h>
 
 #include <asm/tlb.h>
 #include "internal.h"
@@ -1123,13 +1124,15 @@ bool out_of_memory(struct oom_control *oc)
 		/*
 		 * If we got here due to an actual allocation at the
 		 * system level, we cannot survive this and will enter
-		 * an endless loop in the allocator. Bail out now.
+		 * an endless loop in the allocator. So, start dropping caches aggressively.
 		 */
 		if (!is_sysrq_oom(oc) && !is_memcg_oom(oc)) {
 #ifdef CONFIG_PAGE_OWNER
 			print_max_page_owner();
 #endif
 			pr_err("System is deadlocked on memory\n");
+			emergency_sync();
+			mm_drop_caches(3);
 		}
 	}
 	if (oc->chosen && oc->chosen != (void *)-1UL)
