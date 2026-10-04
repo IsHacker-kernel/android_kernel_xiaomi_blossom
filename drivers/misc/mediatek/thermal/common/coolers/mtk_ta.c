@@ -289,119 +289,13 @@ int ta_get_ttj(void)
 
 static void ta_nl_send_to_user(int pid, int seq, struct tad_nl_msg_t *reply_msg)
 {
-	struct sk_buff *skb;
-	struct nlmsghdr *nlh;
-	int size = reply_msg->tad_data_len + TAD_NL_MSG_T_HDR_LEN;
-
-	int len = NLMSG_SPACE(size);
-	void *data;
-	int ret;
-
-	skb = alloc_skb(len, GFP_ATOMIC);
-	if (!skb) {
-		g_ta_status = g_ta_status | 0x00010000;
-		return;
-	}
-	nlh = nlmsg_put(skb, pid, seq, 0, size, 0);
-	data = NLMSG_DATA(nlh);
-	memcpy(data, reply_msg, size);
-	NETLINK_CB(skb).portid = 0; /* from kernel */
-	NETLINK_CB(skb).dst_group = 0; /* unicast */
-
-	tsta_dprintk(
-	"[%s] netlink_unicast size=%d tad_cmd=%d pid=%d\n", __func__,
-		size, reply_msg->tad_cmd, pid);
-
-
-	ret = netlink_unicast(daemo_nl_sk, skb, pid, MSG_DONTWAIT);
-	if (ret < 0) {
-		g_ta_status = g_ta_status | 0x00000010;
-		pr_notice("[%s] send failed %d\n", __func__, ret);
-		return;
-	}
-
-
-	tsta_dprintk("[%s] netlink_unicast- ret=%d\n", __func__, ret);
-
-}
-
-
-static void ta_nl_data_handler(struct sk_buff *skb)
-{
-	u32 pid;
-	kuid_t uid;
-	int seq;
-	void *data;
-	struct nlmsghdr *nlh;
-	struct tad_nl_msg_t *tad_msg = NULL;
-	int size = 0;
-
-	nlh = (struct nlmsghdr *)skb->data;
-	pid = NETLINK_CREDS(skb)->pid;
-	uid = NETLINK_CREDS(skb)->uid;
-	seq = nlh->nlmsg_seq;
-
-	/*tsta_dprintk(
-	 *"[ta_nl_data_handler] recv skb from user space uid:%d pid:%d seq:%d\n"
-	 * ,uid, pid, seq);
-	 */
-	data = NLMSG_DATA(nlh);
-
-	tad_msg = (struct tad_nl_msg_t *)data;
-	if (tad_msg->tad_ret_data_len >= TAD_NL_MSG_MAX_LEN) {
-		g_ta_status = g_ta_status | 0x00000100;
-		tsta_dprintk("[%s] tad_msg->=ad_ret_data_len=%d\n", __func__,
-		tad_msg->tad_ret_data_len);
-		return;
-	}
-
-	size = tad_msg->tad_ret_data_len + TAD_NL_MSG_T_HDR_LEN;
-
-	memset(&tad_ret_msg, 0, size);
-
-	atm_ctrl_cmd_from_user(data, &tad_ret_msg);
-	ta_nl_send_to_user(pid, seq, &tad_ret_msg);
-	tsta_dprintk("[%s] send to user space process done\n", __func__);
-
-
+	return;
 
 }
 
 int wakeup_ta_algo(int flow_state)
 {
-	tsta_dprintk("[%s]g_tad_pid=%d, state=%d\n", __func__, g_tad_pid,
-								flow_state);
-
-	/*Avoid print log too much*/
-	if (g_ta_counter >= 3) {
-		g_ta_counter = 0;
-		if (g_ta_status != 0)
-			tsta_dprintk("[%s] status: 0x%x\n", __func__, g_ta_status);
-	}
-	g_ta_counter++;
-	if (g_tad_pid != 0) {
-		struct tad_nl_msg_t *tad_msg = NULL;
-		int size = TAD_NL_MSG_T_HDR_LEN + sizeof(flow_state);
-
-		/*tad_msg = (struct tad_nl_msg_t *)vmalloc(size);*/
-		tad_msg = kmalloc(size, GFP_KERNEL);
-
-		if (tad_msg == NULL) {
-			g_ta_status = g_ta_status | 0x00100000;
-			return -ENOMEM;
-		}
-		tsta_dprintk("[%s] malloc size=%d\n", __func__, size);
-		memset(tad_msg, 0, size);
-		tad_msg->tad_cmd = TA_DAEMON_CMD_NOTIFY_DAEMON;
-		memcpy(tad_msg->tad_data, &flow_state, sizeof(flow_state));
-		tad_msg->tad_data_len += sizeof(flow_state);
-		ta_nl_send_to_user(g_tad_pid, 0, tad_msg);
-		kfree(tad_msg);
-		return 0;
-	}
-	pr_err("[%s] error,g_tad_pid=0\n", __func__);
-	g_ta_status = g_ta_status | 0x00001000;
-	return -1;
+	return 0;
 }
 
 static int tsta_read_log(struct seq_file *m, void *v)
@@ -525,27 +419,10 @@ static void tsta_create_fs(void)
 
 static int __init ta_init(void)
 {
-	/*add by willcai for the userspace  to kernelspace*/
-	struct netlink_kernel_cfg cfg = {
-		.input  = ta_nl_data_handler,
-	};
-
 	g_tad_pid = 0;
 	init_flag = false;
 	g_tad_ttj = CLCTM_TARGET_TJ;
 	g_ta_status = 0;
-
-	/*add by willcai for the userspace to kernelspace*/
-	daemo_nl_sk = NULL;
-	daemo_nl_sk = netlink_kernel_create(&init_net, NETLINK_TAD, &cfg);
-
-	tsta_dprintk("netlink_kernel_create protol= %d\n", NETLINK_TAD);
-
-	if (daemo_nl_sk == NULL) {
-		pr_err("[%s] netlink_kernel_create error\n", __func__);
-		g_ta_status = 0x00000001;
-		return -1;
-	}
 
 	tsta_create_fs();
 
