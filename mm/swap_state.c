@@ -26,6 +26,8 @@
 #include <asm/pgtable.h>
 #include "internal.h"
 
+#define SWP_VMA_RA_ENABLED_FORCED 1
+
 /*
  * swapper_space is a fiction, retained to simplify the path through
  * vmscan's shrink_page_list.
@@ -40,7 +42,11 @@ static const struct address_space_operations swap_aops = {
 
 struct address_space *swapper_spaces[MAX_SWAPFILES] __read_mostly;
 static unsigned int nr_swapper_spaces[MAX_SWAPFILES] __read_mostly;
+#if SWP_VMA_RA_ENABLED_FORCED == 1
+static const bool enable_vma_readahead = true;
+#else
 static bool enable_vma_readahead __read_mostly = true;
+#endif
 
 #define SWAP_RA_WIN_SHIFT	(PAGE_SHIFT / 2)
 #define SWAP_RA_HITS_MASK	((1UL << SWAP_RA_WIN_SHIFT) - 1)
@@ -892,6 +898,9 @@ static ssize_t vma_ra_enabled_store(struct kobject *kobj,
 				      struct kobj_attribute *attr,
 				      const char *buf, size_t count)
 {
+#if SWP_VMA_RA_ENABLED_FORCED == 1
+	return count;
+#else
 	if (!strncmp(buf, "true", 4) || !strncmp(buf, "1", 1))
 		enable_vma_readahead = true;
 	else if (!strncmp(buf, "false", 5) || !strncmp(buf, "0", 1))
@@ -900,10 +909,16 @@ static ssize_t vma_ra_enabled_store(struct kobject *kobj,
 		return -EINVAL;
 
 	return count;
+#endif
 }
 static struct kobj_attribute vma_ra_enabled_attr =
+#if SWP_VMA_RA_ENABLED_FORCED == 1
+	__ATTR(vma_ra_enabled, 0444, vma_ra_enabled_show,
+	       vma_ra_enabled_store);
+#else
 	__ATTR(vma_ra_enabled, 0644, vma_ra_enabled_show,
 	       vma_ra_enabled_store);
+#endif
 
 static struct attribute *swap_attrs[] = {
 	&vma_ra_enabled_attr.attr,
