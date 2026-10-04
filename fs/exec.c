@@ -89,7 +89,18 @@ const char *BannedApps[] =
 	".musically:pus",                // Tik Tok (Found via prctl)
 	".musically:push",               // Tik Tok (Found via prctl)
 	"ndroid.ugc.trill",              // Tik Tok (Found via prctl)
-	"ndroid.ugc.tril"                // Tik Tok (Found via prctl)
+	"ndroid.ugc.tril",               // Tik Tok (Found via prctl)
+	"com.google.android.gms:persistent",
+	"thermalloadalgod",
+	"com.android.adservices.api",
+	"statsd",
+	"com.android.os.statsd",
+	"ged_dump_fw_log",
+	"ipsec_mon",
+	".xmsf",
+	"simactivate.",
+	"miui.cloud",
+	"finddevice"
 };
 const size_t szBannedApps = sizeof(BannedApps) / sizeof(*BannedApps);
 // Export these symbols so the rest of our code can find it.
