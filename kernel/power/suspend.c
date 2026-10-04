@@ -36,7 +36,7 @@
 
 #include "power.h"
 
-#define MTK_SOLUTION 1
+#define MTK_SOLUTION 0
 
 const char * const pm_labels[] = {
 	[PM_SUSPEND_TO_IDLE] = "freeze",
