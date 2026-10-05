@@ -2475,8 +2475,6 @@ int _trigger_display_interface(int blocking, void *callback,
 		DISPCHECK("wait frame_done at trigger_display_interface\n");
 		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 			DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
-		if (ret <= 0)
-			primary_display_diagnose();
 	}
 
 	if (_should_update_lcm()) {
@@ -2802,7 +2800,6 @@ static int _Interface_fence_release_callback(unsigned long userdata)
 			/* disp_aee_print("dither_stat 0x%x\n", status); */
 			mmprofile_log_ex(ddp_mmp_get_events()->primary_error,
 					 MMPROFILE_FLAG_PULSE, status, 1);
-			primary_display_diagnose();
 			ret = -1;
 		}
 	}
@@ -3683,9 +3680,6 @@ done:
 	pri_wk_lock = wakeup_source_register(NULL, "pri_disp_wakelock");
 	__pm_stay_awake(pri_wk_lock);
 
-	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL)
-		primary_display_diagnose();
-
 	layering_rule_init();
 	_primary_path_unlock(__func__);
 	return ret;
@@ -4054,7 +4048,6 @@ int primary_display_suspend(void)
 			DISPERR("wait frame done in suspend timeout\n");
 			mmprofile_log_ex(ddp_mmp_get_events()->primary_suspend,
 				MMPROFILE_FLAG_PULSE, 3, 2);
-			primary_display_diagnose();
 			ret = -1;
 		}
 	}
@@ -4512,7 +4505,6 @@ int primary_display_resume(void)
 	mmprofile_log_ex(ddp_mmp_get_events()->primary_resume,
 		MMPROFILE_FLAG_PULSE, 0, 9);
 
-	/* primary_display_diagnose(); */
 	mmprofile_log_ex(ddp_mmp_get_events()->primary_resume,
 		MMPROFILE_FLAG_PULSE, 0, 10);
 
@@ -4680,8 +4672,6 @@ void primary_display_update_present_fence(struct cmdqRecStruct *cmdq_handle,
 {
 	cmdqRecBackupUpdateSlot(cmdq_handle, pgc->cur_config_fence,
 		disp_sync_get_present_timeline_id(), fence_idx);
-
-	gPresentFenceIndex = fence_idx;
 }
 
 void primary_display_wakeup_pf_thread(void)
@@ -6460,7 +6450,6 @@ int do_primary_display_switch_mode(int sess_mode, unsigned int session,
 		   sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
 		/* dc to dl */
 		ret = DC_switch_to_DL_fast(sw_only, block);
-		/* primary_display_diagnose(); */
 	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE &&
 		   sess_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE) {
 		/* dl to dl mirror */
@@ -7694,8 +7683,6 @@ static int _screen_cap_by_cpu(unsigned int mva, enum UNIFIED_COLOR_FMT ufmt,
 	if (_should_wait_path_idle()) {
 		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 			DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
-		if (ret <= 0)
-			primary_display_diagnose();
 	}
 
 	_primary_path_lock(__func__);
@@ -7724,8 +7711,6 @@ static int _screen_cap_by_cpu(unsigned int mva, enum UNIFIED_COLOR_FMT ufmt,
 	if (_should_wait_path_idle()) {
 		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 			DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
-		if (ret <= 0)
-			primary_display_diagnose();
 	}
 
 	dpmgr_path_remove_memout(pgc->dpmgr_handle, NULL);
@@ -7938,7 +7923,6 @@ int Panel_Master_dsi_config_entry(const char *name, void *config_value)
 		DISPCHECK("[ESD]wait frame done ret:%d\n", ret);
 		if (event_ret <= 0) {
 			DISPCHECK("wait frame done in suspend timeout\n");
-			primary_display_diagnose();
 			ret = -1;
 		}
 	}
