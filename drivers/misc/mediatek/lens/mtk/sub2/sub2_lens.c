@@ -611,8 +611,12 @@ static int AF_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
+static struct platform_device g_stAF_device;
+
 static int AF_probe(struct platform_device *pdev)
 {
+	if (pdev != &g_stAF_device)
+		return 0;
 	return i2c_add_driver(&AF_i2c_driver);
 }
 
