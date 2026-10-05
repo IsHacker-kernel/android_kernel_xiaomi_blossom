@@ -716,7 +716,7 @@ static int fps_ctx_init(struct fps_ctx_t *fps_ctx, int wnd_sz)
 	return 0;
 }
 
-static unsigned int _fps_ctx_calc_cur_fps(struct fps_ctx_t *fps_ctx,
+static inline unsigned int _fps_ctx_calc_cur_fps(struct fps_ctx_t *fps_ctx,
 	unsigned long long cur_ns)
 {
 	unsigned long long delta;
@@ -733,7 +733,7 @@ static unsigned int _fps_ctx_calc_cur_fps(struct fps_ctx_t *fps_ctx,
 	return (unsigned int)fps;
 }
 
-static unsigned int _fps_ctx_get_avg_fps(struct fps_ctx_t *fps_ctx)
+static inline unsigned int _fps_ctx_get_avg_fps(struct fps_ctx_t *fps_ctx)
 {
 	unsigned int avg_fps;
 
@@ -743,7 +743,7 @@ static unsigned int _fps_ctx_get_avg_fps(struct fps_ctx_t *fps_ctx)
 	return avg_fps;
 }
 
-static unsigned int _fps_ctx_get_avg_fps_ext(struct fps_ctx_t *fps_ctx,
+static inline unsigned int _fps_ctx_get_avg_fps_ext(struct fps_ctx_t *fps_ctx,
 	unsigned int abs_fps)
 {
 	unsigned int avg_fps;
@@ -2713,7 +2713,7 @@ static int _build_path_direct_link(void)
 	return ret;
 }
 
-static int _convert_disp_input_to_ovl(struct OVL_CONFIG_STRUCT *dst,
+static inline int _convert_disp_input_to_ovl(struct OVL_CONFIG_STRUCT *dst,
 	struct disp_input_config *src)
 {
 	int ret = 0;
@@ -3334,7 +3334,7 @@ static int _ovl_fence_release_callback(unsigned long userdata)
 		int fence_idx = 0;
 		int subtractor = 0;
 
-		if (i == primary_display_get_option("ASSERT_LAYER") &&
+		if (i == (PRIMARY_SESSION_INPUT_LAYER_COUNT - 1) &&
 			is_DAL_Enabled()) {
 			mtkfb_release_layer_fence(primary_session_id, i);
 		} else {
@@ -4245,7 +4245,7 @@ int primary_display_release_fence_fake(void)
 	DISPFUNC();
 
 	for (i = 0; i < PRIMARY_SESSION_INPUT_LAYER_COUNT; i++) {
-		if (i == primary_display_get_option("ASSERT_LAYER") &&
+		if (i == (PRIMARY_SESSION_INPUT_LAYER_COUNT - 1) &&
 			is_DAL_Enabled()) {
 			mtkfb_release_layer_fence(session_id, 3);
 		} else {
@@ -5843,7 +5843,7 @@ static void rsz_in_out_roi(struct disp_frame_cfg_t *cfg,
 		data_config->rsz_dst_roi.height);
 }
 
-static int _is_overlap(struct disp_input_config *src,
+static inline int _is_overlap(struct disp_input_config *src,
 			       struct disp_input_config *dst)
 {
 	if ((src->tgt_offset_y + src->tgt_height <=
@@ -5862,7 +5862,7 @@ static int _is_overlap(struct disp_input_config *src,
 
 /* This function can only check for YUV layer overlap*/
 /* Todo: modify this func to check YUV layer number */
-static int _is_yuv_overlap
+static inline int _is_yuv_overlap
 	(struct disp_frame_cfg_t *cfg)
 {
 	int i = 0, j = 0, is_yuv_overlap = 0;
@@ -6094,6 +6094,8 @@ static int _config_ovl_input(struct disp_frame_cfg_t *cfg,
 		assign_full_lcm_roi(&total_dirty_roi);
 
 	rsz_in_out_roi(cfg, data_config);
+	
+	aee_layer = PRIMARY_SESSION_INPUT_LAYER_COUNT - 1;
 
 	for (i = 0; i < cfg->input_layer_num; i++) {
 		struct disp_input_config *input_cfg = &cfg->input_cfg[i];
@@ -6102,7 +6104,6 @@ static int _config_ovl_input(struct disp_frame_cfg_t *cfg,
 		layer = input_cfg->layer_id;
 		ovl_cfg = &(data_config->ovl_config[layer]);
 		if (cfg->setter != SESSION_USER_AEE) {
-			aee_layer = primary_display_get_option("ASSERT_LAYER");
 			if (is_DAL_Enabled() &&	layer == aee_layer) {
 				DISPMSG("skip AEE layer %d\n", layer);
 				continue;
@@ -6586,7 +6587,7 @@ static int primary_frame_cfg_input(struct disp_frame_cfg_t *cfg)
 		if (is_DAL_Enabled() &&
 			cfg->setter == SESSION_USER_AEE &&
 		    (cfg->input_cfg[0].layer_id ==
-		    primary_display_get_option("ASSERT_LAYER"))) {
+		    (PRIMARY_SESSION_INPUT_LAYER_COUNT - 1))) {
 			struct disp_ddp_path_config *data_config =
 				dpmgr_path_get_last_config(disp_handle);
 			int layer = cfg->input_cfg[0].layer_id;
@@ -8335,15 +8336,13 @@ UINT32 DISP_GetVRamSizeBoot(char *cmdline)
 
 unsigned int primary_display_get_option(const char *option)
 {
-	if (!strcmp(option, "FB_LAYER"))
+	if (option[0] == 'F' && option[1] == 'B')
 		return 0;
-	if (!strcmp(option, "ASSERT_LAYER"))
+	if (option[0] == 'A' && option[1] == 'S')
 		return PRIMARY_SESSION_INPUT_LAYER_COUNT - 1;
-	if (!strcmp(option, "M4U_ENABLE"))
+	if (option[0] == 'M' && option[1] == '4')
 		return disp_helper_get_option(DISP_OPT_USE_M4U);
 
-	/* ASSERT(0); */
-	pr_info("%s, invalid option\n", __func__);
 	return -1;
 }
 
