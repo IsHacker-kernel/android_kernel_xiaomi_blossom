@@ -59,6 +59,7 @@
 #include <linux/sched/clock.h>
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
+#include <linux/kprobes.h>
 #include "../time/tick-internal.h"
 
 #include "tree.h"
