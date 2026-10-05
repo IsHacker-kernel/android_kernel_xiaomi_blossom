@@ -859,7 +859,7 @@ mode may make certain vulnerabilities more difficult to exploit.
 Set this to 1 to allow unprivileged users to use the userfaultfd system
 calls without any restrictions.
 
-The default value is 0.
+The default value is 1.
 
 ==============================================================
 
