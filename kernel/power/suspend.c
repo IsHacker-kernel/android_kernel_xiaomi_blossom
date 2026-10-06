@@ -714,6 +714,7 @@ int pm_suspend(suspend_state_t state)
 		return -EINVAL;
 
 	pr_info("suspend entry (%s)\n", mem_sleep_labels[state]);
+	ishacker_system_irq_wakeup_actual = false;
 	error = enter_state(state);
 	if (error) {
 		suspend_stats.fail++;
