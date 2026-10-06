@@ -64,6 +64,7 @@ int *cm_mgr_buf;
 int cm_mgr_cpu_opp_size;
 
 int cm_mgr_blank_status;
+bool ishacker_cm_mgr_screen_on;
 int cm_mgr_disable_fb = 1;
 int cm_mgr_emi_demand_check = 1;
 int cm_mgr_enable = 1;
