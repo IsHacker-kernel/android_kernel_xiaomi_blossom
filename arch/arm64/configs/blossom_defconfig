@@ -1,4 +1,4 @@
-CONFIG_LOCALVERSION="-IsHacker-kernel-v1"
+CONFIG_LOCALVERSION="-IsHacker-kernel-v1.0"
 # CONFIG_DEBUG_KERNEL is not set
 # CONFIG_LOCALVERSION_AUTO is not set
 # CONFIG_KALLSYMS is not set
