@@ -569,11 +569,9 @@ int suspend_devices_and_enter(suspend_state_t state)
  */
 static void suspend_finish(void)
 {
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		suspend_thaw_processes();
-		pm_notifier_call_chain(PM_POST_SUSPEND);
-		pm_restore_console();
-	}
+	suspend_thaw_processes();
+	pm_notifier_call_chain(PM_POST_SUSPEND);
+	pm_restore_console();
 }
 
 #if MTK_SOLUTION
