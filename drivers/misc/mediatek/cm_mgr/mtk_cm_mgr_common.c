@@ -107,6 +107,10 @@ int cm_mgr_cpu_map_dram_enable = 1;
 int cm_mgr_cpu_map_emi_opp = 1;
 int cm_mgr_cpu_map_skip_cpu_opp = 2;
 
+bool ishacker_cm_mgr_screen_on_get() {
+	return ishacker_cm_mgr_screen_on;
+}
+
 static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 		unsigned long event, void *data)
 {

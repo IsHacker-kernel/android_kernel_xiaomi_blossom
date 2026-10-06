@@ -30,6 +30,14 @@ suspend_state_t pm_suspend_target_state;
 
 bool ishacker_system_irq_wakeup_actual = false;
 
+bool ishacker_system_irq_wakeup_actual_get() {
+	return ishacker_system_irq_wakeup_actual;
+}
+
+void ishacker_system_irq_wakeup_actual_set(bool val) {
+	ishacker_system_irq_wakeup_actual = val;
+}
+
 /*
  * If set, the suspend/hibernate code will abort transitions to a sleep state
  * if wakeup events are registered during or immediately before the transition.

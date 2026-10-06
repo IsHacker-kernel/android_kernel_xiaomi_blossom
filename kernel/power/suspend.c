@@ -407,13 +407,13 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	int error, last_dev;
 
 	error = platform_suspend_prepare(state);
-	if (ishacker_cm_mgr_screen_on || ishacker_system_irq_wakeup_actual) {
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
 		if (error)
 			goto Platform_finish;
 	}
 
 	error = dpm_suspend_late(PMSG_SUSPEND);
-	if (ishacker_cm_mgr_screen_on || ishacker_system_irq_wakeup_actual) {
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
 		if (error) {
 			last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
 			last_dev %= REC_FAILED_NUM;
@@ -423,7 +423,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		}
 	}
 	error = platform_suspend_prepare_late(state);
-	if (ishacker_cm_mgr_screen_on || ishacker_system_irq_wakeup_actual) {
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
 		if (error)
 			goto Devices_early_resume;
 	}
@@ -434,7 +434,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	}
 
 	error = dpm_suspend_noirq(PMSG_SUSPEND);
-	if (ishacker_cm_mgr_screen_on || ishacker_system_irq_wakeup_actual) {
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
 		if (error) {
 			last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
 			last_dev %= REC_FAILED_NUM;
@@ -444,7 +444,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		}
 	}
 	error = platform_suspend_prepare_noirq(state);
-	if (ishacker_cm_mgr_screen_on || ishacker_system_irq_wakeup_actual) {
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
 		if (error)
 			goto Platform_wake;
 	}
@@ -453,7 +453,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		goto Platform_wake;
 
 	error = disable_nonboot_cpus();
-	if (ishacker_cm_mgr_screen_on || ishacker_system_irq_wakeup_actual) {
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
 		if (error) {
 			log_suspend_abort_reason("Disabling non-boot cpus failed");
 			goto Enable_cpus;
@@ -569,9 +569,11 @@ int suspend_devices_and_enter(suspend_state_t state)
  */
 static void suspend_finish(void)
 {
-	suspend_thaw_processes();
-	pm_notifier_call_chain(PM_POST_SUSPEND);
-	pm_restore_console();
+	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
+		suspend_thaw_processes();
+		pm_notifier_call_chain(PM_POST_SUSPEND);
+		pm_restore_console();
+	}
 }
 
 #if MTK_SOLUTION
@@ -714,7 +716,7 @@ int pm_suspend(suspend_state_t state)
 		return -EINVAL;
 
 	pr_info("suspend entry (%s)\n", mem_sleep_labels[state]);
-	ishacker_system_irq_wakeup_actual = false;
+	ishacker_system_irq_wakeup_actual_set(false);
 	error = enter_state(state);
 	if (error) {
 		suspend_stats.fail++;
