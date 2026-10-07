@@ -407,26 +407,21 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	int error, last_dev;
 
 	error = platform_suspend_prepare(state);
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		if (error)
-			goto Platform_finish;
-	}
+	if (error)
+		goto Platform_finish;
 
 	error = dpm_suspend_late(PMSG_SUSPEND);
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		if (error) {
-			last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
-			last_dev %= REC_FAILED_NUM;
-			pr_err("late suspend of devices failed\n");
-			log_suspend_abort_reason("late suspend of %s device failed", suspend_stats.failed_devs[last_dev]);
-			goto Platform_finish;
-		}
+	if (error) {
+		last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
+		last_dev %= REC_FAILED_NUM;
+		pr_err("late suspend of devices failed\n");
+		log_suspend_abort_reason("late suspend of %s device failed", suspend_stats.failed_devs[last_dev]);
+		goto Platform_finish;
 	}
+	
 	error = platform_suspend_prepare_late(state);
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		if (error)
-			goto Devices_early_resume;
-	}
+	if (error)
+		goto Devices_early_resume;
 
 	if (state == PM_SUSPEND_TO_IDLE && pm_test_level != TEST_PLATFORM) {
 		s2idle_loop();
@@ -434,31 +429,27 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	}
 
 	error = dpm_suspend_noirq(PMSG_SUSPEND);
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		if (error) {
-			last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
-			last_dev %= REC_FAILED_NUM;
-			pr_err("noirq suspend of devices failed\n");
-			log_suspend_abort_reason("noirq suspend of %s device failed", suspend_stats.failed_devs[last_dev]);
-			goto Platform_early_resume;
-		}
+	if (error) {
+		last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
+		last_dev %= REC_FAILED_NUM;
+		pr_err("noirq suspend of devices failed\n");
+		log_suspend_abort_reason("noirq suspend of %s device failed", suspend_stats.failed_devs[last_dev]);
+		goto Platform_early_resume;
 	}
+
 	error = platform_suspend_prepare_noirq(state);
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		if (error)
-			goto Platform_wake;
-	}
+	if (error)
+		goto Platform_wake;
 
 	if (suspend_test(TEST_PLATFORM))
 		goto Platform_wake;
 
 	error = disable_nonboot_cpus();
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		if (error) {
-			log_suspend_abort_reason("Disabling non-boot cpus failed");
-			goto Enable_cpus;
-		}
+	if (error) {
+		log_suspend_abort_reason("Disabling non-boot cpus failed");
+		goto Enable_cpus;
 	}
+
 
 	if (suspend_test(TEST_CPUS)) {
 		log_suspend_abort_reason("Disabling non-boot cpus failed");
@@ -491,20 +482,28 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	BUG_ON(irqs_disabled());
 
  Enable_cpus:
-	enable_nonboot_cpus();
+ 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
+		enable_nonboot_cpus();
 
  Platform_wake:
-	platform_resume_noirq(state);
-	dpm_resume_noirq(PMSG_RESUME);
+ 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
+		platform_resume_noirq(state);
+		dpm_resume_noirq(PMSG_RESUME);
+	}
 
  Platform_early_resume:
-	platform_resume_early(state);
+ 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
+		platform_resume_early(state);
 
  Devices_early_resume:
-	dpm_resume_early(PMSG_RESUME);
+ 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
+		dpm_resume_early(PMSG_RESUME);
 
  Platform_finish:
-	platform_resume_finish(state);
+ 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
+		platform_resume_finish(state);
+		return 0;
+	}
 	return error;
 }
 
