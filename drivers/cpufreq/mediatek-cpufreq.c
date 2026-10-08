@@ -464,6 +464,7 @@ static int mtk_cpufreq_init(struct cpufreq_policy *policy)
 	policy->freq_table = freq_table;
 	policy->driver_data = info;
 	policy->clk = info->cpu_clk;
+	policy->suspend_freq = policy->min;
 
 	return 0;
 }
@@ -489,6 +490,7 @@ static struct cpufreq_driver mtk_cpufreq_driver = {
 	.ready = mtk_cpufreq_ready,
 	.name = "mtk-cpufreq",
 	.attr = cpufreq_generic_attr,
+	.suspend = cpufreq_generic_suspend,
 };
 
 static int mtk_cpufreq_probe(struct platform_device *pdev)
