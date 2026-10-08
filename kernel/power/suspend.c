@@ -415,10 +415,10 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
 		last_dev %= REC_FAILED_NUM;
 		pr_err("late suspend of devices failed\n");
-		log_suspend_abort_reason("late suspend of %s device failed", suspend_stats.failed_devs[last_dev]);
+		log_suspend_abort_reason("late suspend of %s device failed",
+					 suspend_stats.failed_devs[last_dev]);
 		goto Platform_finish;
 	}
-	
 	error = platform_suspend_prepare_late(state);
 	if (error)
 		goto Devices_early_resume;
@@ -433,10 +433,10 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
 		last_dev %= REC_FAILED_NUM;
 		pr_err("noirq suspend of devices failed\n");
-		log_suspend_abort_reason("noirq suspend of %s device failed", suspend_stats.failed_devs[last_dev]);
+		log_suspend_abort_reason("noirq suspend of %s device failed",
+					 suspend_stats.failed_devs[last_dev]);
 		goto Platform_early_resume;
 	}
-
 	error = platform_suspend_prepare_noirq(state);
 	if (error)
 		goto Platform_wake;
@@ -445,13 +445,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		goto Platform_wake;
 
 	error = disable_nonboot_cpus();
-	if (error) {
-		log_suspend_abort_reason("Disabling non-boot cpus failed");
-		goto Enable_cpus;
-	}
-
-
-	if (suspend_test(TEST_CPUS)) {
+	if (error || suspend_test(TEST_CPUS)) {
 		log_suspend_abort_reason("Disabling non-boot cpus failed");
 		goto Enable_cpus;
 	}
@@ -481,29 +475,24 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	arch_suspend_enable_irqs();
 	BUG_ON(irqs_disabled());
 
+if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error) {
  Enable_cpus:
- 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
-		enable_nonboot_cpus();
+	enable_nonboot_cpus();
 
  Platform_wake:
- 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
-		platform_resume_noirq(state);
-		dpm_resume_noirq(PMSG_RESUME);
-	}
+	platform_resume_noirq(state);
+	dpm_resume_noirq(PMSG_RESUME);
 
  Platform_early_resume:
- 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
-		platform_resume_early(state);
+	platform_resume_early(state);
 
  Devices_early_resume:
- 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
-		dpm_resume_early(PMSG_RESUME);
+	dpm_resume_early(PMSG_RESUME);
+}
 
  Platform_finish:
- 	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) {
+	if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error)
 		platform_resume_finish(state);
-		return 0;
-	}
 	return error;
 }
 

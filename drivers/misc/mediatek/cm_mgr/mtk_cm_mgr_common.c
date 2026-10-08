@@ -107,7 +107,7 @@ int cm_mgr_cpu_map_dram_enable = 1;
 int cm_mgr_cpu_map_emi_opp = 1;
 int cm_mgr_cpu_map_skip_cpu_opp = 2;
 
-bool ishacker_cm_mgr_screen_on_get() {
+bool ishacker_cm_mgr_screen_on_get(void) {
 	return ishacker_cm_mgr_screen_on;
 }
 

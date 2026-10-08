@@ -30,7 +30,7 @@ suspend_state_t pm_suspend_target_state;
 
 bool ishacker_system_irq_wakeup_actual = false;
 
-bool ishacker_system_irq_wakeup_actual_get() {
+bool ishacker_system_irq_wakeup_actual_get(void) {
 	return ishacker_system_irq_wakeup_actual;
 }
 
