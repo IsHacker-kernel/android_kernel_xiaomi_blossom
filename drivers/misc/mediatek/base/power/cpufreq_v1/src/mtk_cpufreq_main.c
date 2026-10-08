@@ -32,6 +32,12 @@ struct opp_idx_tbl opp_tbl_m[NR_OPP_IDX];
 int dvfs_disable_flag;
 int new_idx_bk;
 
+#ifdef CONFIG_MACH_MT6765
+int ishacker_curfreq_l;
+int ishacker_curfreq_ll;
+int ishacker_curfreq_cci;
+#endif
+
 struct mt_cpu_dvfs *id_to_cpu_dvfs(enum mt_cpu_dvfs_id id)
 {
 	return (id < NR_MT_CPU_DVFS) ? &cpu_dvfs[id] : NULL;
@@ -1407,11 +1413,21 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 	case PM_SUSPEND_PREPARE:
 		cpufreq_ver("PM_SUSPEND_PREPARE\n");
 		cpufreq_lock(flags);
+#ifdef CONFIG_MACH_MT6765
+		ishacker_curfreq_l = p[0]->idx_opp_tbl;
+		ishacker_curfreq_ll = p[1]->idx_opp_tbl;
+		ishacker_curfreq_cci = p[2]->idx_opp_tbl;
+#endif
 		for_each_cpu_dvfs(i, p) {
 			if (!cpu_dvfs_is_available(p))
 				continue;
 			p->dvfs_disable_by_suspend = true;
 		}
+#ifdef CONFIG_MACH_MT6765
+			p[0]->idx_opp_tbl = 15;
+			p[1]->idx_opp_tbl = 15;
+			p[2]->idx_opp_tbl = 15;
+#endif
 		cpufreq_unlock(flags);
 		break;
 	case PM_HIBERNATION_PREPARE:
@@ -1420,6 +1436,11 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 	case PM_POST_SUSPEND:
 		cpufreq_ver("PM_POST_SUSPEND\n");
 		cpufreq_lock(flags);
+#ifdef CONFIG_MACH_MT6765
+			p[0]->idx_opp_tbl = ishacker_curfreq_l;
+			p[1]->idx_opp_tbl = ishacker_curfreq_ll;
+			p[2]->idx_opp_tbl = ishacker_curfreq_cci;
+#endif
 		for_each_cpu_dvfs(i, p) {
 			if (!cpu_dvfs_is_available(p))
 				continue;
