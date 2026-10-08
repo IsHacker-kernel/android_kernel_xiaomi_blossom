@@ -478,10 +478,12 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	arch_suspend_enable_irqs();
 	BUG_ON(irqs_disabled());
 
-#ifdef CONFIG_ISHSLEEP_SUSPEND
  Enable_cpus:
+ #ifdef CONFIG_ISHSLEEP_SUSPEND
 	if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error)
 		enable_nonboot_cpus();
+#else
+	enable_nonboot_cpus();
 #endif
 
  Platform_wake:
