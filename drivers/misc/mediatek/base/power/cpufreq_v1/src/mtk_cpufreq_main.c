@@ -1405,9 +1405,9 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 		unsigned long action, void *ptr)
 {
 	struct mt_cpu_dvfs *p;
-	struct mt_cpu_dvfs *p1 = id_to_cpu_dvfs(0);
-	struct mt_cpu_dvfs *p2 = id_to_cpu_dvfs(4);
-	struct mt_cpu_dvfs *p3 = id_to_cpu_dvfs(10);
+	struct mt_cpu_dvfs *p1 = id_to_cpu_dvfs(MT_CPU_DVFS_L);
+	struct mt_cpu_dvfs *p2 = id_to_cpu_dvfs(MT_CPU_DVFS_LL);
+	struct mt_cpu_dvfs *p3 = id_to_cpu_dvfs(MT_CPU_DVFS_CCI);
 	int i;
 	unsigned long flags;
 
