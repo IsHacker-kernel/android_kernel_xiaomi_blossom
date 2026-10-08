@@ -1405,6 +1405,8 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 		unsigned long action, void *ptr)
 {
 	struct mt_cpu_dvfs *p;
+	struct mt_cpu_dvfs *p1 = id_to_cpu_dvfs(0);
+	struct mt_cpu_dvfs *p2 = id_to_cpu_dvfs(1);
 	int i;
 	unsigned long flags;
 
@@ -1414,9 +1416,8 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 		cpufreq_ver("PM_SUSPEND_PREPARE\n");
 		cpufreq_lock(flags);
 #ifdef CONFIG_MACH_MT6765
-		ishacker_curfreq_l = p[0]->idx_opp_tbl;
-		ishacker_curfreq_ll = p[1]->idx_opp_tbl;
-		ishacker_curfreq_cci = p[2]->idx_opp_tbl;
+		ishacker_curfreq_l = p1->idx_opp_tbl;
+		ishacker_curfreq_ll = p2->idx_opp_tbl;
 #endif
 		for_each_cpu_dvfs(i, p) {
 			if (!cpu_dvfs_is_available(p))
@@ -1424,9 +1425,8 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 			p->dvfs_disable_by_suspend = true;
 		}
 #ifdef CONFIG_MACH_MT6765
-			p[0]->idx_opp_tbl = 15;
-			p[1]->idx_opp_tbl = 15;
-			p[2]->idx_opp_tbl = 15;
+			p1->idx_opp_tbl = 15;
+			p2->idx_opp_tbl = 15;
 #endif
 		cpufreq_unlock(flags);
 		break;
@@ -1437,9 +1437,8 @@ _mt_cpufreq_pm_callback(struct notifier_block *nb,
 		cpufreq_ver("PM_POST_SUSPEND\n");
 		cpufreq_lock(flags);
 #ifdef CONFIG_MACH_MT6765
-			p[0]->idx_opp_tbl = ishacker_curfreq_l;
-			p[1]->idx_opp_tbl = ishacker_curfreq_ll;
-			p[2]->idx_opp_tbl = ishacker_curfreq_cci;
+			p1->idx_opp_tbl = ishacker_curfreq_l;
+			p2->idx_opp_tbl = ishacker_curfreq_ll;
 #endif
 		for_each_cpu_dvfs(i, p) {
 			if (!cpu_dvfs_is_available(p))
