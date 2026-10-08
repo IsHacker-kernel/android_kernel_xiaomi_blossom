@@ -147,7 +147,7 @@ static inline void put_online_cpus(void) { cpus_read_unlock(); }
 extern int freeze_secondary_cpus(int primary);
 static inline int disable_nonboot_cpus(void)
 {
-	return freeze_secondary_cpus(0);
+	return freeze_secondary_cpus(CONFIG_NR_CPUS - 1);
 }
 extern void enable_nonboot_cpus(void);
 #else /* !CONFIG_PM_SLEEP_SMP */
