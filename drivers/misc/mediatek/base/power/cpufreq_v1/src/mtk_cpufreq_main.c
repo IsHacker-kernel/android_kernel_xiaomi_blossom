@@ -35,7 +35,6 @@ int new_idx_bk;
 #ifdef CONFIG_MACH_MT6765
 int ishacker_curfreq_l;
 int ishacker_curfreq_ll;
-int ishacker_curfreq_cci;
 #endif
 
 struct mt_cpu_dvfs *id_to_cpu_dvfs(enum mt_cpu_dvfs_id id)
