@@ -134,6 +134,8 @@ static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 		cm_mgr_blank_status = 0;
 #ifdef CONFIG_ISHSLEEP_SUSPEND
 		ishacker_cm_mgr_screen_on = true;
+		if (!ishacker_system_irq_wakeup_actual_get())
+			enable_nonboot_cpus();
 #endif
 #if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT) && defined(USE_CM_MGR_AT_SSPM)
 		cm_mgr_to_sspm_command(IPI_CM_MGR_BLANK, 0);
