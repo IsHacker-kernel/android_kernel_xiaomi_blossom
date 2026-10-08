@@ -13,7 +13,6 @@
 
 unsigned int func_lv_mask;
 unsigned int do_dvfs_stress_test;
-unsigned int dvfs_power_mode;
 unsigned int sched_dvfs_enable;
 
 ktime_t now[NR_SET_V_F];
@@ -27,6 +26,8 @@ enum ppb_power_mode {
 	PERFORMANCE_MODE,	/* sports mode */
 	NUM_PPB_POWER_MODE
 };
+
+unsigned int dvfs_power_mode = PERFORMANCE_MODE;
 
 static const char *power_mode_str[NUM_PPB_POWER_MODE] = {
 	"Default(Normal) mode",
