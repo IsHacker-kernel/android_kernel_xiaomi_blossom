@@ -33,7 +33,10 @@
 #include <linux/compiler.h>
 #include <linux/moduleparam.h>
 #include <linux/wakeup_reason.h>
+
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 #include <ishacker/ishsleep.h>
+#endif
 
 #include "power.h"
 
@@ -475,7 +478,9 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	arch_suspend_enable_irqs();
 	BUG_ON(irqs_disabled());
 
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error) {
+#endif
  Enable_cpus:
 	enable_nonboot_cpus();
 
@@ -488,11 +493,17 @@ if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
 
  Devices_early_resume:
 	dpm_resume_early(PMSG_RESUME);
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 }
+#endif
 
  Platform_finish:
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 	if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error)
 		platform_resume_finish(state);
+#else
+	platform_resume_finish(state);
+#endif
 	return error;
 }
 
@@ -702,7 +713,9 @@ int pm_suspend(suspend_state_t state)
 		return -EINVAL;
 
 	pr_info("suspend entry (%s)\n", mem_sleep_labels[state]);
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 	ishacker_system_irq_wakeup_actual_set(false);
+#endif
 	error = enter_state(state);
 	if (error) {
 		suspend_stats.fail++;

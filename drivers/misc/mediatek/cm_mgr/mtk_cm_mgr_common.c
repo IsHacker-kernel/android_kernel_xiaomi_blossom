@@ -33,7 +33,9 @@
 #include <linux/fb.h>
 #include <linux/notifier.h>
 
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 #include <ishacker/ishsleep.h>
+#endif
 
 #include "mtk_cm_mgr_common.h"
 #include <linux/soc/mediatek/mtk-pm-qos.h>
@@ -64,7 +66,9 @@ int *cm_mgr_buf;
 int cm_mgr_cpu_opp_size;
 
 int cm_mgr_blank_status;
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 bool ishacker_cm_mgr_screen_on;
+#endif
 int cm_mgr_disable_fb = 1;
 int cm_mgr_emi_demand_check = 1;
 int cm_mgr_enable = 1;
@@ -107,9 +111,11 @@ int cm_mgr_cpu_map_dram_enable = 1;
 int cm_mgr_cpu_map_emi_opp = 1;
 int cm_mgr_cpu_map_skip_cpu_opp = 2;
 
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 bool ishacker_cm_mgr_screen_on_get(void) {
 	return ishacker_cm_mgr_screen_on;
 }
+#endif
 
 static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 		unsigned long event, void *data)
@@ -126,7 +132,9 @@ static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 	case FB_BLANK_UNBLANK:
 		pr_info("#@# %s(%d) SCREEN ON\n", __func__, __LINE__);
 		cm_mgr_blank_status = 0;
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 		ishacker_cm_mgr_screen_on = true;
+#endif
 #if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT) && defined(USE_CM_MGR_AT_SSPM)
 		cm_mgr_to_sspm_command(IPI_CM_MGR_BLANK, 0);
 #endif /* CONFIG_MTK_TINYSYS_SSPM_SUPPORT && defined(USE_CM_MGR_AT_SSPM) */
@@ -134,7 +142,9 @@ static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 	case FB_BLANK_POWERDOWN:
 		pr_info("#@# %s(%d) SCREEN OFF\n", __func__, __LINE__);
 		cm_mgr_blank_status = 1;
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 		ishacker_cm_mgr_screen_on = false;
+#endif
 		cm_mgr_dram_opp_base = -1;
 		cm_mgr_perf_platform_set_status(0);
 #if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT) && defined(USE_CM_MGR_AT_SSPM)

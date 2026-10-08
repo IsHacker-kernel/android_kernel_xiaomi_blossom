@@ -19,7 +19,10 @@
 #include <linux/irqdesc.h>
 #include <linux/wakeup_reason.h>
 #include <trace/events/power.h>
+
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 #include <ishacker/ishsleep.h>
+#endif
 
 #include "power.h"
 
@@ -28,6 +31,7 @@ suspend_state_t pm_suspend_target_state;
 #define pm_suspend_target_state	(PM_SUSPEND_ON)
 #endif
 
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 bool ishacker_system_irq_wakeup_actual = false;
 
 bool ishacker_system_irq_wakeup_actual_get(void) {
@@ -37,6 +41,7 @@ bool ishacker_system_irq_wakeup_actual_get(void) {
 void ishacker_system_irq_wakeup_actual_set(bool val) {
 	ishacker_system_irq_wakeup_actual = val;
 }
+#endif
 
 /*
  * If set, the suspend/hibernate code will abort transitions to a sleep state
@@ -952,7 +957,9 @@ void pm_system_irq_wakeup(unsigned int irq_number)
 			name = desc->action->name;
 
 		log_irq_wakeup_reason(irq_number);
+#ifdef CONFIG_ISHSLEEP_SUSPEND
 		ishacker_system_irq_wakeup_actual = true;
+#endif
 		pr_warn("%s: %d triggered %s\n", __func__, irq_number, name);
 
 		pm_wakeup_irq = irq_number;
