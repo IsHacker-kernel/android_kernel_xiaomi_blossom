@@ -1282,7 +1282,7 @@ int freeze_secondary_cpus(int primary)
 	 */
 	cpumask_clear(frozen_cpus);
 
-	pr_info("Disabling non-boot CPUs ...\n");
+	pr_info("Disabling non-boot CPUs. Primary CPU: CPU%d\n", primary);
 	for_each_online_cpu(cpu) {
 		if (cpu == primary)
 			continue;
