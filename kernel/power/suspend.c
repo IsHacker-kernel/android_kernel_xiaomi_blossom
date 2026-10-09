@@ -479,10 +479,10 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	BUG_ON(irqs_disabled());
 
 #ifdef CONFIG_ISHSLEEP_SUSPEND
- Enable_cpus:
-	if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error)
-		enable_nonboot_cpus();
+if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error) {
 #endif
+ Enable_cpus:
+	enable_nonboot_cpus();
 
  Platform_wake:
 	platform_resume_noirq(state);
@@ -493,9 +493,17 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 
  Devices_early_resume:
 	dpm_resume_early(PMSG_RESUME);
+#ifdef CONFIG_ISHSLEEP_SUSPEND
+}
+#endif
 
  Platform_finish:
+#ifdef CONFIG_ISHSLEEP_SUSPEND
+	if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error)
+		platform_resume_finish(state);
+#else
 	platform_resume_finish(state);
+#endif
 	return error;
 }
 
