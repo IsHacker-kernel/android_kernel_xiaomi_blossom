@@ -68,6 +68,7 @@ int cm_mgr_cpu_opp_size;
 int cm_mgr_blank_status;
 #ifdef CONFIG_ISHSLEEP_SUSPEND
 bool ishacker_cm_mgr_screen_on;
+bool ishacker_cm_mgr_screen_on_atleast_once = false;
 #endif
 int cm_mgr_disable_fb = 1;
 int cm_mgr_emi_demand_check = 1;
@@ -134,8 +135,9 @@ static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 		cm_mgr_blank_status = 0;
 #ifdef CONFIG_ISHSLEEP_SUSPEND
 		ishacker_cm_mgr_screen_on = true;
-		if (!ishacker_system_irq_wakeup_actual_get())
+		if (!ishacker_system_irq_wakeup_actual_get() && ishacker_cm_mgr_screen_on_atleast_once)
 			enable_nonboot_cpus();
+		ishacker_cm_mgr_screen_on_atleast_once = true;
 #endif
 #if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT) && defined(USE_CM_MGR_AT_SSPM)
 		cm_mgr_to_sspm_command(IPI_CM_MGR_BLANK, 0);
