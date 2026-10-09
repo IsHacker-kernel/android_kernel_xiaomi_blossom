@@ -480,7 +480,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 
  Enable_cpus:
  #ifdef CONFIG_ISHSLEEP_SUSPEND
-	if (ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())
+	if ((ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get()) && !error)
 		enable_nonboot_cpus();
 #else
 	enable_nonboot_cpus();
