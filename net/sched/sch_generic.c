@@ -35,7 +35,12 @@
 #include <net/xfrm.h>
 
 /* Qdisc to use by default */
+#ifdef CONFIG_NET_SCH_FQ
+extern struct Qdisc_ops fq_qdisc_ops;
+const struct Qdisc_ops *default_qdisc_ops = &fq_qdisc_ops;
+#else
 const struct Qdisc_ops *default_qdisc_ops = &pfifo_fast_ops;
+#endif
 EXPORT_SYMBOL(default_qdisc_ops);
 
 /* Main transmission queue. */
