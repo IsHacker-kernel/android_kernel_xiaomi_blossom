@@ -42,7 +42,9 @@
 
 #define MTK_SOLUTION 0
 
-unsigned long long int ishacker_ishsleep_incr = 0;
+#ifdef CONFIG_ISHSLEEP_SUSPEND
+int ishacker_ishsleep_incr = 0;
+#endif
 
 const char * const pm_labels[] = {
 	[PM_SUSPEND_TO_IDLE] = "freeze",
@@ -483,8 +485,8 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 #ifdef CONFIG_ISHSLEEP_SUSPEND
 while (!(ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())) {
 	ishacker_ishsleep_incr++;
+	ishacker_ishsleep_incr = 0;
 }
-ishacker_ishsleep_incr = 0;
 #endif
  Enable_cpus:
 	enable_nonboot_cpus();
