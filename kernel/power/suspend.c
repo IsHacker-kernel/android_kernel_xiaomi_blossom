@@ -42,10 +42,6 @@
 
 #define MTK_SOLUTION 0
 
-#ifdef CONFIG_ISHSLEEP_SUSPEND
-int ishacker_ishsleep_incr = 0;
-#endif
-
 const char * const pm_labels[] = {
 	[PM_SUSPEND_TO_IDLE] = "freeze",
 	[PM_SUSPEND_STANDBY] = "standby",
@@ -350,6 +346,18 @@ static int suspend_test(int level)
 		return 1;
 	}
 #endif /* !CONFIG_PM_DEBUG */
+#ifdef CONFIG_ISHSLEEP_SUSPEND
+#ifndef CONFIG_PM_DEBUG
+	int pm_test_level = TEST_CORE;
+	if (pm_test_level == level) {
+		while (!(ishacker_system_irq_wakeup_actual_get() || ishacker_cm_mgr_screen_on_get())) {
+			if (ishacker_system_irq_wakeup_actual_get() || ishacker_cm_mgr_screen_on_get())
+				break;
+		}
+		return 1;
+	}
+#endif /* CONFIG_PM_DEBUG */
+#endif /* CONFIG_ISHSLEEP_SUSPEND */
 	return 0;
 }
 
@@ -482,12 +490,6 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	arch_suspend_enable_irqs();
 	BUG_ON(irqs_disabled());
 
-#ifdef CONFIG_ISHSLEEP_SUSPEND
-while (!(ishacker_cm_mgr_screen_on_get() || ishacker_system_irq_wakeup_actual_get())) {
-	ishacker_ishsleep_incr++;
-	ishacker_ishsleep_incr = 0;
-}
-#endif
  Enable_cpus:
 	enable_nonboot_cpus();
 
