@@ -350,9 +350,10 @@ static int suspend_test(int level)
 #ifndef CONFIG_PM_DEBUG
 	int pm_test_level = TEST_CORE;
 	if (pm_test_level == level) {
-		while (!(ishacker_system_irq_wakeup_actual_get() || ishacker_cm_mgr_screen_on_get())) {
+		while (true) {
 			if (ishacker_system_irq_wakeup_actual_get() || ishacker_cm_mgr_screen_on_get())
 				break;
+			msleep(100);
 		}
 		return 1;
 	}
