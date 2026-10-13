@@ -1,5 +1,6 @@
 CONFIG_LOCALVERSION="-IsHacker-kernel-v1.0"
 # CONFIG_DEBUG_KERNEL is not set
+# CONFIG_DEBUG_BUGVERBOSE is not set
 # CONFIG_LOCALVERSION_AUTO is not set
 # CONFIG_KALLSYMS is not set
 # CONFIG_HAVE_KPROBES is not set
