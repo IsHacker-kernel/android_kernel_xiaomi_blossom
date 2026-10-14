@@ -498,7 +498,11 @@ static inline u32 int_sqrt64(u64 x)
 extern void bust_spinlocks(int yes);
 extern int oops_in_progress;		/* If set, an oops, panic(), BUG() or die() is in progress */
 extern int panic_timeout;
+#ifndef CONFIG_PANIC_ON_OOPS
+extern const int panic_on_oops;
+#else
 extern int panic_on_oops;
+#endif
 extern int panic_on_unrecovered_nmi;
 extern int panic_on_io_nmi;
 extern int panic_on_warn;
