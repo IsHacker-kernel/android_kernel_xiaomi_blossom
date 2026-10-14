@@ -351,7 +351,7 @@ static int suspend_test(int level)
 	int pm_test_level = TEST_CORE;
 	if (pm_test_level == level) {
 		while (true) {
-			if (ishacker_system_irq_wakeup_actual_get() || ishacker_cm_mgr_screen_on_get())
+			if (ishacker_system_irq_wakeup_actual_get())
 				break;
 			msleep(100);
 		}
