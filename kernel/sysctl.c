@@ -884,7 +884,11 @@ static struct ctl_table kern_table[] = {
 		.procname	= "panic_on_oops",
 		.data		= &panic_on_oops,
 		.maxlen		= sizeof(int),
+#ifdef CONFIG_PANIC_ON_OOPS
 		.mode		= 0644,
+#else
+		.mode		= 0444,
+#endif
 		.proc_handler	= proc_dointvec,
 	},
 #if defined CONFIG_PRINTK
