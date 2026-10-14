@@ -35,7 +35,11 @@
 #define PANIC_TIMER_STEP 100
 #define PANIC_BLINK_SPD 18
 
+#ifndef CONFIG_PANIC_ON_OOPS
+const int panic_on_oops = 0;
+#else
 int panic_on_oops = CONFIG_PANIC_ON_OOPS_VALUE;
+#endif
 static unsigned long tainted_mask =
 	IS_ENABLED(CONFIG_GCC_PLUGIN_RANDSTRUCT) ? (1 << TAINT_RANDSTRUCT) : 0;
 static int pause_on_oops;
