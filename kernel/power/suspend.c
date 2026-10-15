@@ -338,7 +338,7 @@ MODULE_PARM_DESC(pm_test_delay,
 
 #ifdef CONFIG_ISHSLEEP_SUSPEND
 #ifndef CONFIG_PM_DEBUG
-static unsigned int suspend_duration_ms = 1000;
+static unsigned int suspend_duration_ms = 1900;
 module_param(suspend_duration_ms, uint, 0644);
 MODULE_PARM_DESC(suspend_duration_ms,
 		 "Time in ms to force staying in suspend");
