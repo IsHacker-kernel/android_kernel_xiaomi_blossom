@@ -336,6 +336,15 @@ MODULE_PARM_DESC(pm_test_delay,
 		 "Number of seconds to wait before resuming from suspend test");
 #endif
 
+#ifdef CONFIG_ISHSLEEP_SUSPEND
+#ifndef CONFIG_PM_DEBUG
+static unsigned int suspend_duration_ms = 1000;
+module_param(suspend_duration_ms, uint, 0644);
+MODULE_PARM_DESC(suspend_duration_ms,
+		 "Time in ms to force staying in suspend");
+#endif /* CONFIG_PM_DEBUG */
+#endif /* CONFIG_ISHSLEEP_SUSPEND */
+
 static int suspend_test(int level)
 {
 #ifdef CONFIG_PM_DEBUG
@@ -350,8 +359,10 @@ static int suspend_test(int level)
 #ifndef CONFIG_PM_DEBUG
 	int pm_test_level = TEST_CORE;
 	if (pm_test_level == level) {
-		if (!ishacker_system_irq_wakeup_actual_get())
-			mdelay(1000);
+		if (!ishacker_system_irq_wakeup_actual_get()) {
+			pr_info("ishsleep_suspend: Waiting %d milisecs before resuming\n", suspend_duration_ms);
+			mdelay(suspend_duration_ms);
+		}
 		return 1;
 	}
 #endif /* CONFIG_PM_DEBUG */
