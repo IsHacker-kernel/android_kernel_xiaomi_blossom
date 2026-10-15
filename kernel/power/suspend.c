@@ -351,7 +351,7 @@ static int suspend_test(int level)
 	int pm_test_level = TEST_CORE;
 	if (pm_test_level == level) {
 		if (!ishacker_system_irq_wakeup_actual_get())
-			mdelay(5000);
+			mdelay(1000);
 		return 1;
 	}
 #endif /* CONFIG_PM_DEBUG */
