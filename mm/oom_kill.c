@@ -1070,6 +1070,10 @@ bool out_of_memory(struct oom_control *oc)
 	if (oom_killer_disabled)
 		return false;
 
+	// Drop caches first to free some memory
+	emergency_sync();
+	mm_drop_caches(3);
+
 	if (!is_memcg_oom(oc)) {
 		blocking_notifier_call_chain(&oom_notify_list, 0, &freed);
 		if (freed > 0)
@@ -1131,7 +1135,6 @@ bool out_of_memory(struct oom_control *oc)
 			print_max_page_owner();
 #endif
 			pr_err("System is deadlocked on memory\n");
-			emergency_sync();
 			mm_drop_caches(3);
 		}
 	}
