@@ -664,7 +664,7 @@ static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
 	unsigned int freq;
 
 #ifdef CONFIG_MACH_MT6765
-	freq = (unsigned int) floor(_mt_cpufreq_get(policy->cpu) / 1000);
+	freq = _mt_cpufreq_get(policy->cpu);
 	ret = sprintf(buf, "%u\n", freq);
 #else
 	freq = arch_freq_get_on_cpu(policy->cpu);
