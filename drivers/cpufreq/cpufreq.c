@@ -32,6 +32,8 @@
 #include <linux/tick.h>
 #include <trace/events/power.h>
 
+#include <ishacker/ishcpufreq.h>
+
 static LIST_HEAD(cpufreq_policy_list);
 
 static inline bool policy_is_inactive(struct cpufreq_policy *policy)
@@ -661,6 +663,10 @@ static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
 	ssize_t ret;
 	unsigned int freq;
 
+#ifdef CONFIG_MACH_MT6765
+	freq = (int) floor(_mt_cpufreq_get(policy->cpu) / 1000);
+	ret = sprintf(buf, "%u\n", freq);
+#else
 	freq = arch_freq_get_on_cpu(policy->cpu);
 	if (freq)
 		ret = sprintf(buf, "%u\n", freq);
@@ -669,6 +675,7 @@ static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
 		ret = sprintf(buf, "%u\n", cpufreq_driver->get(policy->cpu));
 	else
 		ret = sprintf(buf, "%u\n", policy->cur);
+#endif
 	return ret;
 }
 

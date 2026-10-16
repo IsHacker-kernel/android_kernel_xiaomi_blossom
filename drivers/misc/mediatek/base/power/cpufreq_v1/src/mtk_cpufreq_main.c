@@ -6,6 +6,9 @@
 #include <linux/random.h>
 #include <linux/pm_opp.h>
 #include <linux/energy_model.h>
+
+#include <ishacker/ishcpufreq.h>
+
 //#include <mt-plat/met_drv.h>
 /* project includes */
 #include "../../include/mtk_ppm_api.h"
@@ -1370,7 +1373,7 @@ static int _mt_cpufreq_exit(struct cpufreq_policy *policy)
 	return 0;
 }
 
-static unsigned int _mt_cpufreq_get(unsigned int cpu)
+unsigned int _mt_cpufreq_get(unsigned int cpu)
 {
 	struct mt_cpu_dvfs *p;
 
