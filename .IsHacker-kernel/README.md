@@ -16,11 +16,11 @@
 # General features (with explanation)
 These features are common accross all supported devices.
 
-**1. No LLMs and full source disclosure:** All code and modifications in the kernel, including this README, is written by a human. No LLMs are used for any kind of assistance for programming, code verification or writting text (like this one). Further, all kernels released under this project will have their source disclosed in a git repo (as required by the GPL) **along with the shell script containing the exact commands used to build the kernel**.
+**1. No Slop and full source disclosure:** All code and modifications in the kernel, including this README, is written by a human. No LLMs are used for any kind of assistance for programming, code verification or writting text (like this one). Further, all kernels released under this project will have their source disclosed in a git repo (as required by the GPL) **along with the shell script containing the exact commands used to build the kernel**.
 
 **2. Overclocking:** The kernels will come with CPU, GPU or, if possible, RAM OC to improve performance. The TX power of the WiFi chip/cellular modem may also be increased for better signal reception. Thus, it is recommended to use phone coolers/custom cooling equipment with these kernels to avoid hardware damage due to overheating.
 
-**3 No Low Memory Killer/LMKD:** Android's Low Memory Killer (userspace lmkd or in-kernel driver) will be removed or disabled. This saves battery by reducing CPU overhead of scanning the memory and killing processes, and by preventing the "kill and reload from flash" situation for cached apps. Also, no automatic killing of background/minimized apps means improved multitasking and productivity, just like how minimized programs don't just automatically get closed due to "low memory" on any Desktop operating systems. **The default Linux OOM killer remains enabled.**
+**3. No Low Memory Killer/LMKD:** Android's Low Memory Killer (userspace lmkd or in-kernel driver) will be removed or disabled. This saves battery by reducing CPU overhead of scanning the memory and killing processes, and by preventing the "kill and reload from flash" situation for cached apps. Also, no automatic killing of background/minimized apps means improved multitasking and productivity, just like how minimized programs don't just automatically get closed due to "low memory" on any Desktop operating systems. **The default Linux OOM killer remains enabled.**
 
 **4. Better memory management:** Featured like Multi-generational LRU (MGLRU), Parallelized kcompressd, etc will be included to improve memory management and increase responsiveness under low memory conditions.
 
