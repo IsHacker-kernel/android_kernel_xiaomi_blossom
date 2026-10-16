@@ -351,7 +351,7 @@ module_param(suspend_duration_ms_max, uint, 0644);
 MODULE_PARM_DESC(suspend_duration_ms_max,
 		 "Maximum time in ms to force staying in suspend");
 static int max_duration_sleep_count = 2;
-module_param(max_duration_sleep_count, uint, 0644);
+module_param(max_duration_sleep_count, int, 0644);
 #endif /* CONFIG_PM_DEBUG */
 #endif /* CONFIG_ISHSLEEP_SUSPEND */
 
