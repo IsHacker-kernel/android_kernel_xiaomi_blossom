@@ -9,7 +9,7 @@ rm -rf KernelSU
 mv drivers/android/dummy_lmk.c drivers/android/lowmemorykiller.c
 git clone https://gitlab.com/clangsantoni/zyc_clang --depth=1 --branch 21 /tmp/clang
 git clone https://github.com/IsHacker-kernel/toolchain_aosp_clang --branch r614150 /tmp/aosp-clang
-export PATH="/tmp/aosp-clang/clang-r614150/bin:${PATH}"
+export PATH="/tmp/aosp-clang/bin:${PATH}"
 clang --version
 export ARCH=${KERNEL_ARCH}
 export CROSS_COMPILE="/tmp/clang/bin/aarch64-linux-gnu-"
