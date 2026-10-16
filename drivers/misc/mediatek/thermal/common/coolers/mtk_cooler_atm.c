@@ -73,8 +73,6 @@
  *Local variable definition
  *=============================================================
  */
-static int print_cunt;
-static int adaptive_limit[5][2];
 
 static kuid_t uid = KUIDT_INIT(0);
 static kgid_t gid = KGIDT_INIT(1000);
@@ -86,8 +84,6 @@ unsigned int adaptive_vpu_power_limit = 0x7FFFFFFF;
 #if defined(THERMAL_MDLA_SUPPORT)
 unsigned int adaptive_mdla_power_limit = 0x7FFFFFFF;
 #endif
-static unsigned int prv_adp_cpu_pwr_lim;
-static unsigned int prv_adp_gpu_pwr_lim;
 #if defined(THERMAL_VPU_SUPPORT)
 static unsigned int prv_adp_vpu_pwr_lim;
 #endif
@@ -369,11 +365,8 @@ static unsigned long atm_hrtimer_polling_delay =
 #endif
 static int atm_curr_maxtj;
 static int atm_prev_maxtj;
-static int krtatm_curr_maxtj;
-static int krtatm_prev_maxtj;
 static u64 atm_curr_maxtj_time;
 static u64 atm_prev_maxtj_time;
-static struct task_struct *krtatm_thread_handle;
 #endif
 
 #ifdef ATM_CFG_PROFILING
