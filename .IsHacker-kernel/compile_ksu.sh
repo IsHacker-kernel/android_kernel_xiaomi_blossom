@@ -5,7 +5,7 @@
 
 export KERNEL_DEFCONFIG="blossom_defconfig"
 git clone https://gitlab.com/clangsantoni/zyc_clang --depth=1 --branch 21 /tmp/clang
-git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 /tmp/aosp-clang
+git clone https://github.com/IsHacker-kernel/toolchain_aosp_clang --branch r614150 /tmp/aosp-clang
 export PATH="/tmp/aosp-clang/clang-r614150/bin:${PATH}"
 clang --version
 

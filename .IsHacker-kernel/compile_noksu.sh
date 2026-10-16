@@ -5,11 +5,10 @@
 
 export KERNEL_DEFCONFIG="blossom_defconfig"
 export KERNEL_ARCH="arm64"
-sed -i -e 's/CONFIG_KSU=y/# CONFIG_KSU is not set/g' arch/${KERNEL_ARCH}/configs/${KERNEL_DEFCONFIG}
 rm -rf KernelSU
 mv drivers/android/dummy_lmk.c drivers/android/lowmemorykiller.c
 git clone https://gitlab.com/clangsantoni/zyc_clang --depth=1 --branch 21 /tmp/clang
-git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 /tmp/aosp-clang
+git clone https://github.com/IsHacker-kernel/toolchain_aosp_clang --branch r614150 /tmp/aosp-clang
 export PATH="/tmp/aosp-clang/clang-r614150/bin:${PATH}"
 clang --version
 export ARCH=${KERNEL_ARCH}
