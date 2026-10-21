@@ -514,6 +514,10 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 
  Platform_finish:
 	platform_resume_finish(state);
+#ifdef CONFIG_ISHSLEEP_SUSPEND
+	if (!ishacker_system_irq_wakeup_actual_get())
+		pm_suspend(state);
+#endif
 	return error;
 }
 
