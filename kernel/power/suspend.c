@@ -367,10 +367,10 @@ static int suspend_test(int level)
 #endif /* !CONFIG_PM_DEBUG */
 #ifdef CONFIG_ISHSLEEP_SUSPEND
 #ifndef CONFIG_PM_DEBUG
+	ishacker_suspend_test_count += 1;
 	int pm_test_level = TEST_CORE;
 	if (pm_test_level == level) {
 		if (!ishacker_system_irq_wakeup_actual_get()) {
-			ishacker_suspend_test_count += 1;
 			if (ishacker_suspend_test_count > max_duration_sleep_count) {
 				ishacker_suspend_test_count = 0;
 				pr_info("ishsleep_suspend: Waiting %d milisecs before resuming\n", suspend_duration_ms_min);
