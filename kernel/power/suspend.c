@@ -350,8 +350,8 @@ static unsigned int suspend_duration_ms_max = 10000;
 module_param(suspend_duration_ms_max, uint, 0644);
 MODULE_PARM_DESC(suspend_duration_ms_max,
 		 "Maximum time in ms to force staying in suspend");
-static int max_duration_sleep_count = 2;
-module_param(max_duration_sleep_count, int, 0644);
+static int min_duration_sleep_count = 2;
+module_param(min_duration_sleep_count, int, 0644);
 #endif /* CONFIG_PM_DEBUG */
 #endif /* CONFIG_ISHSLEEP_SUSPEND */
 
@@ -371,14 +371,14 @@ static int suspend_test(int level)
 	if (pm_test_level == level) {
 		if (!ishacker_system_irq_wakeup_actual_get()) {
 			ishacker_suspend_test_count += 1;
-			if (ishacker_suspend_test_count > max_duration_sleep_count) {
+			if (ishacker_suspend_test_count > min_duration_sleep_count) {
 				ishacker_suspend_test_count = 0;
-				pr_info("ishsleep_suspend: Waiting %d milisecs before resuming\n", suspend_duration_ms_min);
-				mdelay(suspend_duration_ms_min);
-			}
-			else {
 				pr_info("ishsleep_suspend: Waiting %d milisecs before resuming\n", suspend_duration_ms_max);
 				mdelay(suspend_duration_ms_max);
+			}
+			else {
+				pr_info("ishsleep_suspend: Waiting %d milisecs before resuming\n", suspend_duration_ms_min);
+				mdelay(suspend_duration_ms_min);
 			}
 		}
 		return 1;
