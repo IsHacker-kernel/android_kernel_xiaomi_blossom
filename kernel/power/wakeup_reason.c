@@ -28,9 +28,6 @@
 #include <linux/suspend.h>
 #include <linux/slab.h>
 
-#ifdef CONFIG_ISHSLEEP_SUSPEND
-#include <ishacker/ishsleep.h>
-#endif
 
 /*
  * struct wakeup_irq_node - stores data and relationships for IRQs logged as
