@@ -16,7 +16,7 @@
 # General features (with explanation)
 These features are common accross all supported devices.
 
-**1. No Slop and full source disclosure:** All code and modifications in the kernel, including this README, is written by a human. No LLMs are used for any kind of assistance for programming, code verification or writting text (like this one). Further, all kernels released under this project will have their source disclosed in a git repo (as required by the GPL) **along with the shell script containing the exact commands used to build the kernel**.
+**1. No Slop and full source disclosure:** All code and modifications in the kernel, including this README, is written by a human. No LLMs are used for any kind of assistance for programming, code verification or writting text (like this one). Further, all kernels released under this project will have their source disclosed in a git repo (as required by the GPL) **along with the shell script containing the exact commands used to build the kernel**. The shell scripts are in the **.IsHacker-kernel/** directory inside the kernel source.
 
 **2. Overclocking:** The kernels will come with CPU, GPU or, if possible, RAM OC to improve performance. The TX power of the WiFi chip/cellular modem may also be increased for better signal reception. Thus, it is recommended to use phone coolers/custom cooling equipment with these kernels to avoid hardware damage due to overheating.
 
@@ -37,9 +37,39 @@ These features are common accross all supported devices.
 Please listen to this carefully. Root access is an essential part of every OS, and it is not at all wrong to have it. In fact, any OS is incomplete without superuser rights. If an app refuses to work becuase tour phone has root access, the developer has some serious issues and it is morally wrong to use such apps. If your banking app detects root, you can use net-banking in the browser. And no, root does not "compromise your device's security and privacy", rather in most cases, it actually improves them, significantly. Please do **NOT** fall for such propaganda!
 
 # Device-specific features
+1. Compiled on my own PC running Linux Mint 22.3, and not on Github Actions or Docker
+2. Compiled with full LTO, Polly, -O3, -ffast-math and CPU-specific optimization flags
+3. Added WireGuard
+4. Upstreamed kernel to 4.19.325
+5. CPU Overclock: +200 MHz BIG (Stock: 2001 MHz), +200 MHz LITTLE (Stock: 1500 MHz), +200 MHz CCI (Ring/Cache frequency) (Stock: 1048 MHz)
+6. GPU Overclock: +30 MHz (Stock 650 MHz)
+7. Added MGLRU, kshrinkd and parallelized (multi-threaded) kcompressd
+8. Removed a lot of debugging code and improved memory management by cherry-picking danya2271's commits from Kuroneko
+9. Removed bcct chrlmt charging speed throttling
+10. Removed Mediatek's absurd thermal throttling feature (i.e mtk_atm_cooler) and removed krtatm
+11. Disabled EEM, PPM, PBM, FPSGO, and power throttling
+12. Faster camera opening
+13. Fixed many vulnerabilities and bugs
+14. Default CPU governor is performance
+15. Completely disabled Android LMKD/Low Memory Killer through in-kernel dummy driver (Linux's default OOM killer remains enabled)
+16. Prevents "libperfmgr" (e.g in CrDroid) from tampering with CPU frequency and scheduling settings by adding dummy kobjects
+17. Manual KSU integration without Kprobes or Kallsyms (for KSU version)
+18. Improved ZRAM speed through updated LZ4 driver
+19. Enabled Swap VMA readahead by default
+20. Disabled Panic on OOPS
+21. Better USB tethering speed
+22. Disabled WiFi Gen4M dynamic TX power switching (TX power is now locked at NAX)
+23. Increased MD1 TX power to 5500 mW (Stock: 4000 mW)
+24. Disabled unnecessary sound drivers
+25. Disabled charger2, bcct, btsmdpa and wmt thermal sensors
+26. RCU improvements
+27. Added around 10MB extra RAM by removing debugging/unnecessary memory reservations from DTS
+28. Added SRANDOM driver for faster /dev/urandom and /dev/random reading
+29. Improved GPU performance by optimizing the code (other than the OC)
+30. Video Encoder/Decoder improvements - you can play 1080p 60FPS VP9 videos on m.youtube.com without too much buffering
 
 # Download
-1. KSU version:
+1. KSU version: (Manager APK: )
 2. Non-KSU version:
 
 # Kernel source
@@ -48,6 +78,16 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 # Bugs
 Everything else work as intended except for the listed bugs.
 
-1. Deep sleep (not working properly)
+1. Deep sleep does not work properly, which causes very high idle battery drain (around 40% overnight)
 
 # Credits
+## Base kernel
+https://github.com/Iam-nishan/Jujutsu-kernel
+## Commits (cherry-picked from these repos)
+1. https://github.com/quangwang123/QKernel
+2. https://github.com/danya2271/kuroneko_r_mt6765
+3. https://github.com/danya2271/mt6765_kuroneko_x
+4. https://github.com/shinichi-c/Dynamic_kernel_4.19_oneplus_sdm845
+5. https://github.com/physwizz/A042-U-u6-u8
+6. https://github.com/KarlosComK/CKernel
+7. https://github.com/plmzaq2112/android_kernel_mt6765
