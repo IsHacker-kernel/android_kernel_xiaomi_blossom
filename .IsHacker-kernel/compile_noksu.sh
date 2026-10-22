@@ -5,7 +5,8 @@
 
 export KERNEL_DEFCONFIG="blossom_defconfig"
 export KERNEL_ARCH="arm64"
-rm -rf KernelSU
+chmod u+x clean.sh
+bash clean.sh
 mv drivers/android/dummy_lmk.c drivers/android/lowmemorykiller.c
 git clone https://gitlab.com/clangsantoni/zyc_clang --depth=1 --branch 21 /tmp/clang
 git clone https://github.com/IsHacker-kernel/toolchain_aosp_clang --branch r614150 /tmp/aosp-clang
