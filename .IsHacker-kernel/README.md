@@ -61,7 +61,7 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 22. Disabled WiFi Gen4M dynamic TX power switching (TX power is now locked at NAX)
 23. Increased MD1 TX power to 5500 mW (Stock: 4000 mW)
 24. Disabled unnecessary sound drivers
-25. Disabled charger2, bcct, btsmdpa and wmt thermal sensors
+25. Disabled charger2, bcct, btsmdpa, ta and wmt thermal sensors
 26. RCU improvements
 27. Added around 10MB extra RAM by removing debugging/unnecessary memory reservations from DTS
 28. Added SRANDOM driver for faster /dev/urandom and /dev/random reading
