@@ -28,10 +28,6 @@
 #include <linux/suspend.h>
 #include <linux/slab.h>
 
-#ifdef CONFIG_ISHSLEEP_SUSPEND
-#include <ishacker/ishsleep.h>
-#endif
-
 /*
  * struct wakeup_irq_node - stores data and relationships for IRQs logged as
  * either base or nested wakeup reasons during suspend/resume flow.
@@ -295,9 +291,6 @@ static void print_wakeup_sources(void)
 		pr_info("Resume caused by %s\n", non_irq_wake_reason);
 	else
 		pr_info("Resume cause unknown\n");
-#ifdef CONFIG_ISHSLEEP_SUSPEND
-		pm_suspend(PM_SUSPEND_MEM);
-#endif
 
 	spin_unlock_irqrestore(&wakeup_reason_lock, flags);
 }
