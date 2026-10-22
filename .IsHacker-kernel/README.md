@@ -69,8 +69,8 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 30. Video Encoder/Decoder improvements - you can play 1080p 60FPS VP9 videos on m.youtube.com without too much buffering
 
 # Download
-1. KSU version: https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.0/IsHacker-kernel-v1.0-blossom-KSU.zip (Manager APK: https://github.com/backslashxx/KernelSU/releases/download/v3.3.1%2B22/KernelSU_v3.3.1+22_32702-release.apk)
-2. Non-KSU version: https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.0/IsHacker-kernel-v1.0-blossom-VANILLA.zip
+1. KSU version: [IsHacker-kernel-v1.0-blossom-KSU.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.0/IsHacker-kernel-v1.0-blossom-KSU.zip) (Manager APK: [KernelSU_v3.3.1+22_32702-release.apk](https://github.com/backslashxx/KernelSU/releases/download/v3.3.1%2B22/KernelSU_v3.3.1+22_32702-release.apk))
+2. Non-KSU version: [IsHacker-kernel-v1.0-blossom-VANILLA.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.0/IsHacker-kernel-v1.0-blossom-VANILLA.zip)
 
 # Kernel source
 [android_kernel_xiaomi_blossom](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom)
