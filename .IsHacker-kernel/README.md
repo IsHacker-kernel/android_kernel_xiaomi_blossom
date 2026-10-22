@@ -42,7 +42,7 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 3. Added WireGuard
 4. Upstreamed kernel to 4.19.325
 5. CPU Overclock: +200 MHz BIG (Stock: 2001 MHz), +200 MHz LITTLE (Stock: 1500 MHz), +200 MHz CCI (Ring/Cache frequency) (Stock: 1048 MHz)
-6. GPU Overclock: +30 MHz (Stock 650 MHz)
+6. GPU Overclock: +30 MHz (Stock: 650 MHz)
 7. Added MGLRU, kshrinkd and parallelized (multi-threaded) kcompressd
 8. Removed a lot of debugging code and improved memory management by cherry-picking danya2271's commits from Kuroneko
 9. Removed bcct chrlmt charging speed throttling
