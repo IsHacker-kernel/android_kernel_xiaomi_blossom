@@ -52,13 +52,13 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 13. Fixed many vulnerabilities and bugs
 14. Default CPU governor is performance
 15. Completely disabled Android LMKD/Low Memory Killer through in-kernel dummy driver (Linux's default OOM killer remains enabled)
-16. Prevents "libperfmgr" (e.g in CrDroid) from tampering with CPU frequency and scheduling settings by adding dummy kobjects
+16. Prevents "libperfmgr" (e.g in CrDroid) from tampering with CPU frequency and scheduling settings, by adding dummy kobjects
 17. Manual KSU integration without Kprobes or Kallsyms (for KSU version)
 18. Improved ZRAM speed through updated LZ4 driver
 19. Enabled Swap VMA readahead by default
 20. Disabled Panic on OOPS
 21. Better USB tethering speed
-22. Disabled WiFi Gen4M dynamic TX power switching (TX power is now locked at NAX)
+22. Disabled WiFi Gen4M dynamic TX power switching (TX power is now locked at MAX)
 23. Increased MD1 TX power to 5500 mW (Stock: 4000 mW)
 24. Disabled unnecessary sound drivers
 25. Disabled charger2, bcct, btsmdpa, ta and wmt thermal sensors
@@ -74,7 +74,7 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 
 All Android 11+ 64-bit R-vendor AOSP ROMs are supported. 
 
-**NOTE:**
+### NOTE:
 
 **MIUI is not supported.**
 
