@@ -67,10 +67,18 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 28. Added SRANDOM driver for faster /dev/urandom and /dev/random reading
 29. Improved GPU performance by optimizing the code (other than the OC)
 30. Video Encoder/Decoder improvements - you can play 1080p 60FPS VP9 videos on m.youtube.com without too much buffering
+31. Automatic dropping of caches (equivalent to `echo 3 > /proc/sys/vm/drop_caches`) when memory is low
+32. Optimized for the `2 GB RAM / 32 GB ROM` version of the device
 
 # Compatibility
 
-All Android 11+ 64-bit R-vendor AOSP ROMs are supported. **MIUI is not supported.**
+All Android 11+ 64-bit R-vendor AOSP ROMs are supported. 
+
+**NOTE:**
+
+**MIUI is not supported.**
+
+**CrDroid 13 (Android 17) is not supported.**
 
 # Download
 1. KSU version: [IsHacker-kernel-v1.0-blossom-KSU.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.0/IsHacker-kernel-v1.0-blossom-KSU.zip) (Manager APK: [KernelSU_v3.3.1+22_32702-release.apk](https://github.com/backslashxx/KernelSU/releases/download/v3.3.1%2B22/KernelSU_v3.3.1+22_32702-release.apk))
