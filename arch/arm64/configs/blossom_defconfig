@@ -2147,6 +2147,7 @@ CONFIG_RT2X00_LIB_LEDS=y
 # CONFIG_MAC80211_HWSIM is not set
 # CONFIG_USB_NET_RNDIS_WLAN is not set
 CONFIG_VIRT_WIFI=y
+
 #
 # Enable WiMAX (Networking options) to see the WiMAX drivers
 #
