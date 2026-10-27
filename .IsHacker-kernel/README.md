@@ -30,7 +30,7 @@ These features are common accross all supported devices.
 
 **7. Additional features:** WireGuard, Kali NetHunter modules, KVM, backports from mainline kernels and other additional features may also be included in the kernels.
 
-**8. Official KSU only:** Wherever KernelSU is integrated as the in-kernel root solution, only the official KernelSU or a backport of it (such as the [fork by backslashxx](https://github.com/backslashxx/KernelSU)) will be used, and not derivatives like KSU-Next or (Re)SukiSu. This is because the official version is the most lightweight and the most stable one, due to unavailability of "root hiding" features.
+**8. Official KSU only:** Wherever KernelSU is integrated as the in-kernel root solution, only the official KernelSU or a backport of it (such as the [fork by backslashxx](https://github.com/backslashxx/KernelSU)) will be used, and not derivatives like KSU-Next or (Re)SukiSu. This is because the official version is the most lightweight and the most stable one, due to unavailability of "root hiding" / "mod hiding features" features. **"SusFS" will not be supported for this same reason**, and also because it slows down the device and causes runtime overhead.
 
 **But I want to hide root to use "banking" apps!!!**
 
