@@ -70,7 +70,7 @@ Please listen to this carefully. Root access is an essential part of every OS, a
 31. Automatic dropping of caches (equivalent to `echo 3 > /proc/sys/vm/drop_caches`) when memory is low
 32. Optimized for the `2 GB RAM / 32 GB ROM` version of the device
 33. BBR congestion control + FQ qdisc as defaults (For IPv4)
-34. Supports for Monitor Mode for Ralink RT2800 USB WiFi adaptors
+34. Support for Monitor Mode for Ralink RT2800 USB WiFi adaptors
 35. Supports ZRAM Deduplication to reduce ZRAM memory usage
 
 # Compatibility
