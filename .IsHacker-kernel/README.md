@@ -22,7 +22,7 @@ These features are common accross all supported devices.
 
 **3. No Low Memory Killer/LMKD:** Android's Low Memory Killer (userspace lmkd or in-kernel driver) will be removed or disabled. This saves battery by reducing CPU overhead of scanning the memory and killing processes, and by preventing the "kill and reload from flash" situation for cached apps. Also, no automatic killing of background/minimized apps means improved multitasking and productivity, just like how minimized programs don't just automatically get closed due to "low memory" on any Desktop operating systems. **The default Linux OOM killer remains enabled.**
 
-**4. Better memory management:** Featured like Multi-generational LRU (MGLRU), Parallelized kcompressd, etc will be included to improve memory management and increase responsiveness under low memory conditions.
+**4. Better memory management:** Features like Multi-generational LRU (MGLRU), Parallelized kcompressd, etc will be included to improve memory management and increase responsiveness under low memory conditions.
 
 **5. No thermal/power throttling:** Absurd thermal/power throttling "features" (like the one on Mediatek devices) will be removed to let the device utilize its full potential. Again, external cooling is recommended (but NOT enforced, unlike thermal throttling ;) It's your choice) to prevent hardware damage due to overheating.
 
@@ -84,8 +84,8 @@ All Android 11+ 64-bit R-vendor AOSP ROMs are supported.
 **CrDroid 13 (Android 17) is not supported.**
 
 # Download
-1. KSU version: [IsHacker-kernel-v1.0-blossom-KSU.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.1/IsHacker-kernel-v1.1-blossom-KSU.zip) (Manager APK: [KernelSU_v3.3.1-35_32715-release.apk](https://github.com/backslashxx/KernelSU/releases/download/v3.3.1-35/KernelSU_v3.3.1-35_32715-release.apk))
-2. Non-KSU version: [IsHacker-kernel-v1.0-blossom-VANILLA.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.1/IsHacker-kernel-v1.1-blossom-VANILLA.zip)
+1. KSU version: [IsHacker-kernel-v1.1-blossom-KSU.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.1/IsHacker-kernel-v1.1-blossom-KSU.zip) (Manager APK: [KernelSU_v3.3.1-35_32715-release.apk](https://github.com/backslashxx/KernelSU/releases/download/v3.3.1-35/KernelSU_v3.3.1-35_32715-release.apk))
+2. Non-KSU version: [IsHacker-kernel-v1.1-blossom-VANILLA.zip](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom/releases/download/v1.1/IsHacker-kernel-v1.1-blossom-VANILLA.zip)
 
 # Kernel source
 [android_kernel_xiaomi_blossom](https://github.com/IsHacker-kernel/android_kernel_xiaomi_blossom)
