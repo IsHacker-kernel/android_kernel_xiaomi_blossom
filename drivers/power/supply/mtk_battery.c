@@ -384,14 +384,9 @@ static void mtk_battery_external_power_changed(struct power_supply *psy)
 {
 	struct mtk_battery *gm;
 	struct battery_data *bs_data;
-	union power_supply_propval online = { .intval = 0 };
-	union power_supply_propval status = {
-		.intval = POWER_SUPPLY_STATUS_UNKNOWN
-	};
-	union power_supply_propval prop_type = {
-		.intval = POWER_SUPPLY_USB_TYPE_UNKNOWN
-	};
-	int cur_chr_type = POWER_SUPPLY_USB_TYPE_UNKNOWN;
+	union power_supply_propval online, status;
+	union power_supply_propval prop_type;
+	int cur_chr_type;
 
 	struct power_supply *chg_psy = NULL;
 	int ret;
@@ -411,10 +406,6 @@ static void mtk_battery_external_power_changed(struct power_supply *psy)
 
 		ret = power_supply_get_property(chg_psy,
 			POWER_SUPPLY_PROP_STATUS, &status);
-		if (ret < 0)
-			status.intval = online.intval ?
-				POWER_SUPPLY_STATUS_CHARGING :
-				POWER_SUPPLY_STATUS_DISCHARGING;
 
 		if (!online.intval)
 			bs_data->bat_status = POWER_SUPPLY_STATUS_DISCHARGING;
@@ -428,23 +419,19 @@ static void mtk_battery_external_power_changed(struct power_supply *psy)
 			fg_sw_bat_cycle_accu(gm);
 		}
 
-		if (status.intval == POWER_SUPPLY_STATUS_FULL) {
-			if (!gm->b_EOC) {
-				bm_err("POWER_SUPPLY_STATUS_FULL\n");
-				notify_fg_chr_full(gm);
-			}
+		if (status.intval == POWER_SUPPLY_STATUS_FULL
+			&& gm->b_EOC != true) {
+			bm_err("POWER_SUPPLY_STATUS_FULL\n");
 			gm->b_EOC = true;
-		} else {
+			notify_fg_chr_full(gm);
+		} else
 			gm->b_EOC = false;
-		}
 
 		battery_update(gm);
 
 		/* check charger type */
 		ret = power_supply_get_property(chg_psy,
 			POWER_SUPPLY_PROP_USB_TYPE, &prop_type);
-		if (ret < 0)
-			prop_type.intval = POWER_SUPPLY_USB_TYPE_UNKNOWN;
 
 		/* plug in out */
 		cur_chr_type = prop_type.intval;
@@ -3169,3 +3156,4 @@ int battery_init(struct platform_device *pdev)
 
 	return 0;
 }
+
