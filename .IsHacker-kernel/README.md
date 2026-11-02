@@ -106,3 +106,4 @@ https://github.com/Iam-nishan/Jujutsu-kernel
 5. https://github.com/physwizz/A042-U-u6-u8
 6. https://github.com/KarlosComK/CKernel
 7. https://github.com/plmzaq2112/android_kernel_mt6765
+8. https://github.com/zyexro/sashimi_kernel_xiaomi_blossom
